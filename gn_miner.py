@@ -40,7 +40,6 @@ def scrape_by_tree(math_id, req_lim=5):
                                     for desc in future.result()['descendants']]
                 except:
                     print("An error occurred: ", future.exception())
-
                 try:
                     future = next_futures.pop(0)
                 except (IndexError):
@@ -56,7 +55,7 @@ def get_mathematician_info(math_id):
     entry = {'math_id':math_id, 'name': get_name(soup), 'dissertation': get_dissertation(soup),
             'school': get_school(soup),'year_grad': get_year_grad(soup),'descendants': descs}
 
-    tab.insert_one(entry)
+    tab.insert_one(entry) #error will be thrown when this fails
 
     return entry
 

@@ -36,7 +36,7 @@ def scrape_by_tree(math_id, req_lim=5):
         while True:
             if future.done():
                 try:
-                    next_futures+= [executor.submit(get_mathematician_info, desc[0])
+                    next_futures+= [executor.submit(get_mathematician_info, int(desc[0]))
                                     for desc in future.result()['descendants']]
                 except:
                     print("An error occurred: ", future.exception())
@@ -47,15 +47,15 @@ def scrape_by_tree(math_id, req_lim=5):
                     break
 
 
-def get_mathematician_info(math_id):
+def get_mathematician_info(math_id, insert=True):
     ''''''
     req = requests.get(base_url+str(math_id),headers={'User-Agent': 'Mozilla/5.0'})
     soup = BeautifulSoup(req.text, 'html.parser')
     descs = get_descendants(soup)
     entry = {'math_id':math_id, 'name': get_name(soup), 'dissertation': get_dissertation(soup),
             'school': get_school(soup),'year_grad': get_year_grad(soup),'descendants': descs}
-
-    tab.insert_one(entry) #error will be thrown when this fails
+    if insert:
+        tab.insert_one(entry) #error will be thrown when this fails
 
     return entry
 
@@ -80,7 +80,7 @@ def get_school(soup):
 
 def get_year_grad(soup):
     try:
-        return soup.findAll('span')[0].contents[1].contents[0]
+        return int(soup.findAll('span')[0].text[-4:])
     except:
         return ''
 

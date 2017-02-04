@@ -8,7 +8,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 # might need to change this if you don't have default settings on MongoDB
 client = MongoClient('localhost',27017)
 db = client['geneology']
-tab = db['phds']
+tab = db['phds2']
 
 base_url = 'https://www.genealogy.math.ndsu.nodak.edu/id.php?id='
 
@@ -26,17 +26,17 @@ def scrape_by_incr(end=21000, req_lim=5):
             exit_counter += 1
 
 
-def scrape_by_tree(math_id, req_lim=5):
+def scrape_by_tree(math_id, insert=True):
     '''TODO: pick a root mathematician and collect data starting from that root'''
 
     error_count = 0
     with ThreadPoolExecutor() as executor:
-        future = executor.submit(get_mathematician_info,math_id) #submit root for tasks
+        future = executor.submit(get_mathematician_info,math_id, insert) #submit root for tasks
         next_futures = []
         while True:
             if future.done():
                 try:
-                    next_futures+= [executor.submit(get_mathematician_info, int(desc[0]))
+                    next_futures+= [executor.submit(get_mathematician_info, int(desc[0]), insert)
                                     for desc in future.result()['descendants']]
                 except:
                     print("An error occurred: ", future.exception())
@@ -54,8 +54,10 @@ def get_mathematician_info(math_id, insert=True):
     descs = get_descendants(soup)
     entry = {'math_id':math_id, 'name': get_name(soup), 'dissertation': get_dissertation(soup),
             'school': get_school(soup),'year_grad': get_year_grad(soup),'descendants': descs}
+
+     #error will be thrown when the next part fails
     if insert:
-        tab.insert_one(entry) #error will be thrown when this fails
+        tab.insert_one(entry)
 
     return entry
 
@@ -88,11 +90,10 @@ def get_year_grad(soup):
 def get_descendants(soup):
     try:
         desc_table = soup.findAll('div',{'id':'mainContent'})[0].div.table.findAll('a')
-        return [(''.join(filter(lambda x: x.isdigit(), desc['href'])), desc.text)
+        return [(int(''.join(filter(lambda x: x.isdigit()), desc['href'])), desc.text)
                 for desc in desc_table]
     except:
         return []
-
 
 if __name__ == "__main__":
     scrape_by_tree(18231) # root is Gauss

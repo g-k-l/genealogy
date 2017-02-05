@@ -31,7 +31,7 @@ def scrape_by_tree(math_id, insert=True):
 
     error_count = 0
     with ThreadPoolExecutor() as executor:
-        future = executor.submit(get_mathematician_info,math_id, insert) #submit root for tasks
+        future = executor.submit(get_mathematician_info, math_id, insert) #submit root for tasks
         next_futures = []
         while True:
             if future.done():
@@ -90,7 +90,7 @@ def get_year_grad(soup):
 def get_descendants(soup):
     try:
         desc_table = soup.findAll('div',{'id':'mainContent'})[0].div.table.findAll('a')
-        return [(int(''.join(filter(lambda x: x.isdigit()), desc['href'])), desc.text)
+        return [(int(''.join(filter(lambda x: x.isdigit(), desc['href']))), desc.text)
                 for desc in desc_table]
     except:
         return []

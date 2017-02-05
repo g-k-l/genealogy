@@ -27,13 +27,13 @@ app.route('/tree')
 
 // obtains the info of phd with the speicified math_ids from the database
 // returns an array of json docs
-// Everything is strings! EVERYTHING.
 app.route("/tree/:math_ids")
 	.get(function (req, res) {
 		MongoClient.connect(mongo_url, function (err, db) {
 			if (err) console.log(err);
 			try {
-				var id_array = req.params.math_ids.split(',');
+				var id_array = req.params.math_ids.split(',')
+					.map(Number);
 			} catch (e) {
 				res.json({
 					'msg': "parseInt failed. Error: " + e
@@ -41,7 +41,7 @@ app.route("/tree/:math_ids")
 				return
 			}
 			console.log(id_array);
-			var col = db.collection("phds");
+			var col = db.collection("phds2");
 			col.find({
 					"math_id": {
 						$in: id_array
@@ -49,8 +49,16 @@ app.route("/tree/:math_ids")
 				})
 				.toArray(function (err, items) {
 					if (err) throw err;
-					console.log(items);
-					res.json(items);
+					var unique_ids = [],
+						uniques = [];
+					for (var i = 0; i < items.length; i++) {
+						if (!unique_ids.includes(items[i].math_id)) {
+							unique_ids.push(items[i].math_id);
+							uniques.push(items[i]);
+						}
+					}
+					console.log(uniques);
+					res.json(uniques);
 				});
 		});
 	});

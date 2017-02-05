@@ -4,9 +4,9 @@ var margin = {
 		top: 20,
 		right: 250,
 		bottom: 20,
-		left: 250
+		left: 300
 	},
-	width = 1960 - margin.right - margin.left,
+	width = 2300 - margin.right - margin.left,
 	height = 1000 - margin.top - margin.bottom;
 
 var i = 0,
@@ -58,8 +58,13 @@ function update(source) {
 
 	// Normalize for fixed-depth.
 	nodes.forEach(function (d) {
-		d.y = d.depth * 300;
+		d.y = (d.depth * 300);
 	});
+
+	//TODO: adjust depth by year_grad
+	// nodes.forEach(function (d) {
+	// 	d.y = (d.depth * 300) + (d.year_grad - root.year_grad);
+	// });
 
 	// Update the nodes…
 	var node = svg.selectAll("g.node")
@@ -119,7 +124,7 @@ function update(source) {
 		});
 
 	nodeUpdate.select("circle")
-		.attr("r", 4.5)
+		.attr("r", 6)
 		.style("fill", function (d) {
 			return d.descendants.length ? "lightsteelblue" : "#fff";
 		});
@@ -206,7 +211,7 @@ function click(d) {
 		d._children = null;
 		update(d);
 		// otherwise, load children
-	} else if (d.depth >= 3 && d.descendants.length != 0) {
+	} else if (d.depth >= 5 && d.descendants.length != 0) {
 		// reset the root to d if in too deep and more children coming
 		resetRoot(d);
 		console.log("C");

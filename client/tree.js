@@ -73,7 +73,7 @@ svg.call(tip);
 
 //load root of the tree.
 // klein: 7401. Gauss:18231
-d3.xhr("http://localhost:7000/tree/18231", function (error, data) {
+d3.xhr("http://104.236.161.21:7000/tree/18231", function (error, data) {
 	if (error) throw error;
 	root = JSON.parse(data.response)[0];
 	root.x0 = height / 2;
@@ -312,7 +312,7 @@ function resetRoot(new_root) {
 function loadChildren(d) {
 	if (d.descendants.length === 0) return;
 
-	var req_str = "http://localhost:7000/tree/" + d.descendants.map(function (a) {
+	var req_str = "http://104.236.161.21:7000/tree/" + d.descendants.map(function (a) {
 			return a[0];
 		})
 		.reduce(function (a, b) {

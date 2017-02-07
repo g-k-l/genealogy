@@ -2,7 +2,6 @@
 
 ## TODO Features
 - method to reset to original and/or change the root
-- perhaps a backward traversal feature?
 - hover-over tool-tip info for each mathematicians
 - side box for mathematician info (get from wikipedia) if available.
 - when click on university name, tool-tip of university's website if available
@@ -14,9 +13,11 @@
 
 ## Working Features
 - root reset when the tree gets too large.
+- backward traversal by clicking on left margin
 
 ## Bugs
-- some way of handling excessive children which causes text-mashing (e.g. Ernst Eduard Kunmer, C. Felix Klein)
+- some way of handling excessive children which causes text-mashing (e.g. Ernst Eduard Kunmer, C. Felix Klein) proposed solution: display a max of 15 children. Then have some mechanism for cycling through them.
+- depth rule is not respected in backward traversal.
 
 ## Bugs Fixed
 - need to make sure the colors are correct for nodes that have children

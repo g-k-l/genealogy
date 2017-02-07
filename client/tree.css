@@ -19,10 +19,16 @@
   stroke-width: 1.5px;
 }
 
+rect.btn {
+  stroke:#fff;
+  fill:#fff;
+  fill-opacity:0;
+  stroke-opacity:0;
+}
+
 .d3-tip {
   font: 12px sans-serif;
   line-height: 1;
-  font-weight: bold;
   padding: 12px;
   background: rgba(0, 0, 0, 0.8);
   color: #fff;

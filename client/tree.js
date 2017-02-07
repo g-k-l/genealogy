@@ -11,10 +11,14 @@ var margin = {
 
 var i = 0,
 	duration = 750,
-	root;
+	root,
+	children_lim = 15;
 
 var tree = d3.layout.tree()
 	.size([height, width])
+	.separation(function (a, b) {
+		return a.parent == b.parent ? 1 : 2;
+	});
 
 var diagonal = d3.svg.diagonal()
 	.projection(function (d) {
@@ -35,10 +39,24 @@ var svg = d3.select("body")
 	.append("g")
 	.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+// Provides backward traversal
+d3.select("svg")
+	.append("rect")
+	.attr("class", "btn")
+	.attr("width", margin.left * 0.75)
+	.attr("height", height)
+	.on("click", function () {
+		console.log("Parent Reset Triggered");
+		if (root.parent) {
+			root = root.parent;
+			update(root);
+		}
+	});
+
 svg.call(tip);
 
 //load root of the tree.
-d3.xhr("http://localhost:7000/tree/18231", function (error, data) {
+d3.xhr("http://localhost:7000/tree/7401", function (error, data) {
 	if (error) throw error;
 	root = JSON.parse(data.response)[0];
 	root.x0 = height / 2;
@@ -56,15 +74,10 @@ function update(source) {
 		.reverse(),
 		links = tree.links(nodes);
 
-	// Normalize for fixed-depth.
+	// adjust depth by year_grad
 	nodes.forEach(function (d) {
-		d.y = (d.depth * 300);
+		d.y = (d.year_grad - root.year_grad) * 12;
 	});
-
-	//TODO: adjust depth by year_grad
-	// nodes.forEach(function (d) {
-	// 	d.y = (d.depth * 300) + (d.year_grad - root.year_grad);
-	// });
 
 	// Update the nodes…
 	var node = svg.selectAll("g.node")
@@ -78,14 +91,14 @@ function update(source) {
 		.attr("class", "node")
 		.attr("transform", function (d) {
 			return "translate(" + source.y0 + "," + source.x0 + ")";
-		})
-		.on("click", click)
+		});
 
 	nodeEnter.append("circle")
 		.attr("r", 1e-6)
 		.style("fill", function (d) {
 			return d.children ? "lightsteelblue" : "#fff";
-		});
+		})
+		.on("click", click);
 
 	nodeEnter.append("text")
 		.attr("x", function (d) {
@@ -102,7 +115,7 @@ function update(source) {
 		.on("mouseout", tip.hide)
 		.style("fill-opacity", 1e-6);
 
-	nodeEnter.append("text")
+	nodeEnter.append("text-university")
 		.attr("x", function (d) {
 			return d.children || d._children || d.descendants.length ? -10 : 10;
 		})
@@ -211,7 +224,7 @@ function click(d) {
 		d._children = null;
 		update(d);
 		// otherwise, load children
-	} else if (d.depth >= 5 && d.descendants.length != 0) {
+	} else if (d.depth >= 3 && d.descendants.length != 0) {
 		// reset the root to d if in too deep and more children coming
 		resetRoot(d);
 		console.log("C");
@@ -257,6 +270,8 @@ function resetRoot(new_root) {
 }
 
 // load descendants information
+// the maximum number of children displayed is set by children_lim
+// the undisplayed children are lumped into a single node
 function loadChildren(d) {
 	if (d.descendants.length === 0) return
 
@@ -268,8 +283,23 @@ function loadChildren(d) {
 		});
 	d3.xhr(req_str, function (error, data) {
 		if (error) throw error;
-		d.children = JSON.parse(data.response);
+
+		// sort children by year_grad
+		d.children = JSON.parse(data.response)
+			.sort(function (a, b) {
+				if (b.year_grad - a.year_grad != 0) return b.year_grad - a.year_grad
+				else return b.math_id - a.math_id;
+			});
+
+		// hide some children if there are too many
+		d.hidden_children = d.children.slice(children_lim);
+		d.children = d.children.slice(0, children_lim);
+
 		d.children_loaded = true;
 		update(d);
 	});
+}
+
+function cycleChildren(d) {
+
 }

@@ -1,7 +1,8 @@
 # geneology
 
 ## TODO Features
-- method to reset to original and/or change the root
+- right-side svg overflow scrolling
+- method to reset to original and/or change the root: click on name, causing highlight, then click button "set as root"
 - hover-over tool-tip info for each mathematicians
 - side box for mathematician info (get from wikipedia) if available.
 - when click on university name, tool-tip of university's website if available

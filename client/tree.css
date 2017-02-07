@@ -1,4 +1,13 @@
-
+.jumbotron {
+  background-color:transparent !important;
+  position: relative;
+  padding:0 !important;
+  margin-top:40px !important;
+  background: #eee;
+  margin-top: 23px;
+  text-align:center;
+  margin-bottom: 0 !important;
+}
 .node {
   cursor: pointer;
 }
@@ -24,6 +33,10 @@ rect.btn {
   fill:#fff;
   fill-opacity:0;
   stroke-opacity:0;
+}
+
+.year-ticks {
+  font: 12px sans-serif;
 }
 
 .d3-tip {

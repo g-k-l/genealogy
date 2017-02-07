@@ -2,12 +2,13 @@
 
 var margin = {
 		top: 20,
-		right: 250,
+		right: 200,
 		bottom: 20,
-		left: 300
+		left: 200
 	},
-	width = 2300 - margin.right - margin.left,
-	height = 1000 - margin.top - margin.bottom;
+	width = 1800 - margin.right - margin.left,
+	height = 800 - margin.top - margin.bottom,
+	year_depth_mult = 12;
 
 var i = 0,
 	duration = 750,
@@ -53,10 +54,26 @@ d3.select("svg")
 		}
 	});
 
+// Provides year tickmarks
+d3.select("g")
+	.append("rect")
+	.attr("class", "btn")
+	.attr("width", width)
+	.attr("height", margin.top)
+	.on("mouseover", function () {
+		console.log("Displaying years");
+		draw_years();
+	})
+	.on("mouseout", function () {
+		console.log("Hiding years");
+		hide_years();
+	});
+
 svg.call(tip);
 
 //load root of the tree.
-d3.xhr("http://localhost:7000/tree/7401", function (error, data) {
+// klein: 7401. Gauss:18231
+d3.xhr("http://localhost:7000/tree/18231", function (error, data) {
 	if (error) throw error;
 	root = JSON.parse(data.response)[0];
 	root.x0 = height / 2;
@@ -76,7 +93,7 @@ function update(source) {
 
 	// adjust depth by year_grad
 	nodes.forEach(function (d) {
-		d.y = (d.year_grad - root.year_grad) * 12;
+		d.y = d.year_grad ? (d.year_grad - root.year_grad) * year_depth_mult : year_depth_mult;
 	});
 
 	// Update the nodes…
@@ -96,11 +113,13 @@ function update(source) {
 	nodeEnter.append("circle")
 		.attr("r", 1e-6)
 		.style("fill", function (d) {
-			return d.children ? "lightsteelblue" : "#fff";
+			return (d._children || d.hidden_children) ? "lightsteelblue" : "#fff";
 		})
 		.on("click", click);
 
+	// mathematician name
 	nodeEnter.append("text")
+		.attr("class", "name")
 		.attr("x", function (d) {
 			return d.children || d._children || d.descendants.length ? -10 : 10;
 		})
@@ -115,7 +134,11 @@ function update(source) {
 		.on("mouseout", tip.hide)
 		.style("fill-opacity", 1e-6);
 
-	nodeEnter.append("text-university")
+	// university info
+	nodeEnter.append("text")
+		.attr("id", function (d) {
+			return d.math_id;
+		})
 		.attr("x", function (d) {
 			return d.children || d._children || d.descendants.length ? -10 : 10;
 		})
@@ -127,7 +150,20 @@ function update(source) {
 		.text(function (d) {
 			return d.school;
 		})
-		.style("fill-opacity", 1e-6);
+		.style("fill-opacity", 1e-6)
+		.on("mouseover", function () {
+			d3.select(this)
+				.transition()
+				.duration(duration * 0.5)
+				.style('fill-opacity', 1)
+		})
+		.on("mouseout", function () {
+			d3.select(this)
+				.transition()
+				.delay(duration * 0.5)
+				.duration(duration * 0.5)
+				.style('fill-opacity', 1e-6)
+		})
 
 	// Transition nodes to their new position.
 	var nodeUpdate = node.transition()
@@ -139,10 +175,10 @@ function update(source) {
 	nodeUpdate.select("circle")
 		.attr("r", 6)
 		.style("fill", function (d) {
-			return d.descendants.length ? "lightsteelblue" : "#fff";
+			return (d._children || d.hidden_children || d.descendants.length) ? "lightsteelblue" : "#fff";
 		});
 
-	nodeUpdate.selectAll("text")
+	nodeUpdate.selectAll("text.name")
 		.style("fill-opacity", 1);
 
 	// Transition exiting nodes to the parent's new position.
@@ -224,7 +260,7 @@ function click(d) {
 		d._children = null;
 		update(d);
 		// otherwise, load children
-	} else if (d.depth >= 3 && d.descendants.length != 0) {
+	} else if (d.depth >= 3 && (d.descendants && d.descendants.length != 0)) {
 		// reset the root to d if in too deep and more children coming
 		resetRoot(d);
 		console.log("C");
@@ -271,9 +307,10 @@ function resetRoot(new_root) {
 
 // load descendants information
 // the maximum number of children displayed is set by children_lim
-// the undisplayed children are lumped into a single node
+//  TODO: the undisplayed children are lumped into a single node
+// having processed the node, set d.descendants to null
 function loadChildren(d) {
-	if (d.descendants.length === 0) return
+	if (d.descendants.length === 0) return;
 
 	var req_str = "http://localhost:7000/tree/" + d.descendants.map(function (a) {
 			return a[0];
@@ -292,14 +329,52 @@ function loadChildren(d) {
 			});
 
 		// hide some children if there are too many
-		d.hidden_children = d.children.slice(children_lim);
-		d.children = d.children.slice(0, children_lim);
-
+		if (d.children.length > children_lim) {
+			d.hidden_children = d.children.slice(children_lim);
+			d.children = d.children.slice(0, children_lim);
+		}
 		d.children_loaded = true;
+		d.descendants = [];
 		update(d);
 	});
 }
 
 function cycleChildren(d) {
 
+}
+
+var ticks = width / year_depth_mult / 10;
+
+function draw_years() {
+	if (d3.selectAll('.year-ticks')[0]
+		.length > 0) {
+		d3.selectAll('.year-ticks')
+			.transition()
+			.duration(duration / 2)
+			.style('opacity', 1);
+
+		return;
+	}
+	for (var i = 0; i < ticks; i++) {
+		d3.select('g')
+			.append("text")
+			.attr("class", "year-ticks")
+			.attr("x", year_depth_mult * i * 10)
+			.attr("y", 0)
+			.style('opacity', 1e-6)
+			.text(root.year_grad + i * 10)
+	}
+	d3.selectAll(".year-ticks")
+		.transition()
+		.duration(duration)
+		.style('opacity', 1);
+}
+
+function hide_years() {
+	d3.selectAll(".year-ticks")
+		.transition()
+		.delay(duration * 4)
+		.duration(duration)
+		.style('opacity', 1e-6)
+		.remove();
 }

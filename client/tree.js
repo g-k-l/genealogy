@@ -1,13 +1,13 @@
 /* INITIAL SETUP */
 
 var margin = {
-		top: 20,
+		top: 80,
 		right: 200,
 		bottom: 20,
-		left: 200
+		left: 250
 	},
-	width = 1800 - margin.right - margin.left,
-	height = 800 - margin.top - margin.bottom,
+	width = 1900 - margin.right - margin.left,
+	height = 850 - margin.top - margin.bottom,
 	year_depth_mult = 12;
 
 var i = 0,
@@ -30,21 +30,43 @@ var tip = d3.tip()
 	.attr('class', 'd3-tip')
 	.offset([-10, 0])
 	.html(function (d) {
-		return "<strong>Year:</strong> <span style='color:red'>" + d.year_grad + "</span>";
+		return "<strong>Year:</strong> <span style='color:white'>" + d.year_grad + "</span>";
 	})
 
-var svg = d3.select("body")
+var svg_canvas = d3.select("body")
 	.append("svg")
 	.attr("width", width + margin.right + margin.left)
 	.attr("height", height + margin.top + margin.bottom)
-	.append("g")
-	.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-// Provides backward traversal
+// define gradients used in this project
+var leftGradient = d3.select("svg")
+	.append('defs')
+	.append('radialGradient')
+	.attr('id', 'leftGradient');
+
+leftGradient.append('stop')
+	.attr("offset", "5%")
+	.attr("stop-color", "#F0F8FF");
+leftGradient.append('stop')
+	.attr("offset", "95%")
+	.attr("stop-color", "#FFFFFF");
+
+d3.select("svg")
+	.append("rect")
+	.attr("width", margin.left * 0.75)
+	.attr("height", height)
+	.attr("fill-opacity", 1)
+	.attr("fill", "url(#leftGradient)");
+
+var svg = svg_canvas
+	.append("g")
+	.attr("transform", "translate(" + margin.left + "," + margin.top / 2 + ")");
+
+// Provides backward traversal via left rectangular region
 d3.select("svg")
 	.append("rect")
 	.attr("class", "btn")
-	.attr("width", margin.left * 0.75)
+	.attr("width", margin.left * 0.6)
 	.attr("height", height)
 	.on("click", function () {
 		console.log("Parent Reset Triggered");
@@ -55,11 +77,11 @@ d3.select("svg")
 	});
 
 // Provides year tickmarks
-d3.select("g")
+d3.select("svg")
 	.append("rect")
 	.attr("class", "btn")
 	.attr("width", width)
-	.attr("height", margin.top)
+	.attr("height", margin.top / 2)
 	.on("mouseover", function () {
 		console.log("Displaying years");
 		draw_years();
@@ -72,8 +94,8 @@ d3.select("g")
 svg.call(tip);
 
 //load root of the tree.
-// klein: 7401. Gauss:18231
-d3.xhr("http://104.236.161.21:7000/tree/18231", function (error, data) {
+//klein: 7401. Gauss:18231
+d3.xhr("http://localhost:7000/tree/18231", function (error, data) {
 	if (error) throw error;
 	root = JSON.parse(data.response)[0];
 	root.x0 = height / 2;
@@ -93,7 +115,7 @@ function update(source) {
 
 	// adjust depth by year_grad
 	nodes.forEach(function (d) {
-		d.y = d.year_grad ? (d.year_grad - root.year_grad) * year_depth_mult : year_depth_mult;
+		d.y = d.year_grad ? (d.year_grad - root.year_grad) * year_depth_mult : d.parent.y + year_depth_mult;
 	});
 
 	// Update the nodes…
@@ -109,13 +131,6 @@ function update(source) {
 		.attr("transform", function (d) {
 			return "translate(" + source.y0 + "," + source.x0 + ")";
 		});
-
-	nodeEnter.append("circle")
-		.attr("r", 1e-6)
-		.style("fill", function (d) {
-			return (d._children || d.hidden_children) ? "lightsteelblue" : "#fff";
-		})
-		.on("click", click);
 
 	// mathematician name
 	nodeEnter.append("text")
@@ -165,6 +180,22 @@ function update(source) {
 				.style('fill-opacity', 1e-6)
 		})
 
+	// outer circle indicates hidden_children that can be cycled through
+	nodeEnter.append("circle")
+		.attr('class', 'outer')
+		.attr("r", 1e-6)
+		.on("click", cycleChildren);
+
+
+	nodeEnter.append("circle")
+		.attr('class', 'inner')
+		.attr("r", 1e-6)
+		.style("fill", function (d) {
+			return (d._children || d.hidden_children) ? "lightsteelblue" : "#fff";
+		})
+		.on("click", click);
+
+
 	// Transition nodes to their new position.
 	var nodeUpdate = node.transition()
 		.duration(duration)
@@ -172,10 +203,16 @@ function update(source) {
 			return "translate(" + d.y + "," + d.x + ")";
 		});
 
-	nodeUpdate.select("circle")
+	nodeUpdate.select("circle.inner")
 		.attr("r", 6)
 		.style("fill", function (d) {
 			return (d._children || d.hidden_children || d.descendants.length) ? "lightsteelblue" : "#fff";
+		});
+
+	nodeUpdate.select("circle.outer")
+		.attr("r", function (d) {
+			if (d.hidden_children || d.descendants.length > children_lim) return 12;
+			else return 0;
 		});
 
 	nodeUpdate.selectAll("text.name")
@@ -307,12 +344,11 @@ function resetRoot(new_root) {
 
 // load descendants information
 // the maximum number of children displayed is set by children_lim
-//  TODO: the undisplayed children are lumped into a single node
 // having processed the node, set d.descendants to null
 function loadChildren(d) {
 	if (d.descendants.length === 0) return;
 
-	var req_str = "http://104.236.161.21:7000/tree/" + d.descendants.map(function (a) {
+	var req_str = "http://localhost:7000/tree/" + d.descendants.map(function (a) {
 			return a[0];
 		})
 		.reduce(function (a, b) {
@@ -339,10 +375,17 @@ function loadChildren(d) {
 	});
 }
 
+// When clicked on a node with children overflow, cycle through its children
+// one by one (move one from hidden_children to children, and one from children to hidden)
 function cycleChildren(d) {
-
+	if (d.children_loaded) {
+		d.hidden_children.push(d.children.shift());
+		d.children.push(d.hidden_children.shift());
+		update(d);
+	}
 }
 
+// This portion handles the x-axis year-ticks
 var ticks = width / year_depth_mult / 10;
 
 function draw_years() {
@@ -352,15 +395,14 @@ function draw_years() {
 			.transition()
 			.duration(duration / 2)
 			.style('opacity', 1);
-
 		return;
 	}
 	for (var i = 0; i < ticks; i++) {
-		d3.select('g')
+		d3.select('svg')
 			.append("text")
 			.attr("class", "year-ticks")
-			.attr("x", year_depth_mult * i * 10)
-			.attr("y", 0)
+			.attr("x", year_depth_mult * i * 10 + margin.left)
+			.attr("y", margin.top / 3)
 			.style('opacity', 1e-6)
 			.text(root.year_grad + i * 10)
 	}

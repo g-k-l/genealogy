@@ -11,6 +11,7 @@
 
 ## TODO UI Features
 - Better layout... somehow
+- make text more readable on hover-over
 
 ## Working Features
 - root reset when the tree gets too large.

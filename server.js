@@ -6,7 +6,7 @@ var path = require('path')
 var MongoClient = require('mongodb')
 	.MongoClient
 var root = __dirname;
-var mongo_url = 'mongodb://localhost:27017/geneology';
+var mongo_url = 'mongodb://public_reader:1234*@ds149049.mlab.com:49049/phds';
 
 app.use(express.static(root));
 app.use(express.static(root + "/client"));
@@ -15,12 +15,8 @@ http.listen(7000, function () {
 	console.log('Listening at Port 7000');
 });
 
+// main route
 app.route('/')
-	.get(function (req, res) {
-		res.sendFile(root + '/test.html')
-	});
-
-app.route('/tree')
 	.get(function (req, res) {
 		res.sendFile(root + '/client/tree.html')
 	});
@@ -40,7 +36,6 @@ app.route("/tree/:math_ids")
 				});
 				return
 			}
-			console.log(id_array);
 			var col = db.collection("phds2");
 			col.find({
 					"math_id": {
@@ -57,8 +52,33 @@ app.route("/tree/:math_ids")
 							uniques.push(items[i]);
 						}
 					}
-					console.log(uniques);
 					res.json(uniques);
 				});
 		});
+	});
+
+app.route("/tree/name/:root_name")
+	.get(function (req, res) {
+		MongoClient.connect(mongo_url, function (err, db) {
+			if (err) console.log(err);
+			var col = db.collection("phds2");
+			col.find({
+					"name": {
+						$regex: req.params.root_name
+					}
+				})
+				.toArray(function (err, items) {
+					if (err) throw err;
+					var unique_ids = [],
+						uniques = [];
+					for (var i = 0; i < items.length; i++) {
+						if (!unique_ids.includes(items[i].math_id)) {
+							unique_ids.push(items[i].math_id);
+							uniques.push(items[i]);
+						}
+					}
+					console.log(uniques);
+					res.json(uniques);
+				});
+		})
 	});

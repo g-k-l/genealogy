@@ -1,5 +1,7 @@
 /* INITIAL SETUP */
 
+var req_root = "http://localhost:7000/tree/";
+
 var margin = {
 		top: 80,
 		right: 200,
@@ -95,14 +97,27 @@ svg.call(tip);
 
 //load root of the tree.
 //klein: 7401. Gauss:18231
-d3.xhr("http://localhost:7000/tree/18231", function (error, data) {
-	if (error) throw error;
-	root = JSON.parse(data.response)[0];
-	root.x0 = height / 2;
-	root.y0 = 0;
-	loadChildren(root);
-});
+function tree_init(math_id) {
 
+	d3.xhr(req_root + math_id, function (error, data) {
+		if (error) throw error;
+
+		root = JSON.parse(data.response)[0];
+		root.x0 = height / 2;
+		root.y0 = 0;
+
+		// kill everything for clean slate
+		d3.selectAll(".node .link")
+			.transition()
+			.duration(duration)
+			.attr("transform", "translate(" + root.y0 + "," + root.x0 + ")")
+			.attr("opacity", 1e-6)
+			.remove();
+
+		loadChildren(root);
+	});
+}
+tree_init(18231);
 
 /* INTERACTIVITY */
 
@@ -136,7 +151,14 @@ function update(source) {
 	nodeEnter.append("text")
 		.attr("class", "name")
 		.attr("x", function (d) {
-			return d.children || d._children || d.descendants.length ? -10 : 10;
+			if (d.children || d._children || d.descendants.length) {
+				if (d.hidden_children || d.descendants.length > children_lim) {
+					return -15;
+				} else {
+					return -10;
+				}
+			}
+			return 10;
 		})
 		.attr("dy", ".35em")
 		.attr("text-anchor", function (d) {
@@ -147,6 +169,7 @@ function update(source) {
 		})
 		.on("mouseover", tip.show)
 		.on("mouseout", tip.hide)
+		.on("dblclick", resetRoot)
 		.style("fill-opacity", 1e-6);
 
 	// university info
@@ -157,7 +180,7 @@ function update(source) {
 		.attr("x", function (d) {
 			return d.children || d._children || d.descendants.length ? -10 : 10;
 		})
-		.attr("dy", "2em")
+		.attr("dy", "1.5em")
 		.attr("text-anchor", function (d) {
 			return d.children || d._children || d.descendants.length ? "end" : "start";
 		})
@@ -186,12 +209,17 @@ function update(source) {
 		.attr("r", 1e-6)
 		.on("click", cycleChildren);
 
-
 	nodeEnter.append("circle")
 		.attr('class', 'inner')
 		.attr("r", 1e-6)
 		.style("fill", function (d) {
 			return (d._children || d.hidden_children) ? "lightsteelblue" : "#fff";
+		})
+		.on("mouseover", function() {
+			d3.select(this).transition().duration(duration*0.3).attr("r", 9);
+		})
+		.on("mouseout", function() {
+			d3.select(this).transition().duration(duration*0.3).attr("r", 6);
 		})
 		.on("click", click);
 
@@ -348,7 +376,7 @@ function resetRoot(new_root) {
 function loadChildren(d) {
 	if (d.descendants.length === 0) return;
 
-	var req_str = "http://localhost:7000/tree/" + d.descendants.map(function (a) {
+	var req_str = req_root + d.descendants.map(function (a) {
 			return a[0];
 		})
 		.reduce(function (a, b) {
@@ -400,6 +428,7 @@ function draw_years() {
 	for (var i = 0; i < ticks; i++) {
 		d3.select('svg')
 			.append("text")
+			.attr("text-anchor", "end")
 			.attr("class", "year-ticks")
 			.attr("x", year_depth_mult * i * 10 + margin.left)
 			.attr("y", margin.top / 3)
@@ -420,3 +449,17 @@ function hide_years() {
 		.style('opacity', 1e-6)
 		.remove();
 }
+
+// Handles custom-setting root
+$('#form-root')
+	.submit(function (event) {
+		d3.xhr(req_root + 'name/' + $("#input-root")
+			.val(),
+			function (err, data) {
+				var results = JSON.parse(data.response)
+			 	tree_init(results[0].math_id);
+				// for (var i = 0; i < results.length; i++) {
+				// }
+			});
+		event.preventDefault();
+	});

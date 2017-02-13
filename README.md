@@ -3,10 +3,6 @@
 ## TODO Features
 - remove the jumbotron to make room for svg: to include search results as nodes.
 - a svg-based legend
-- search results displayed as svg nodes
-- right-side svg overflow scrolling
-- method to reset to original and/or change the root: enter name
-- hover-over tool-tip info for each mathematicians
 - side box for mathematician info (get from wikipedia) if available.
 - vertical year division in the background and properly position nodes
 - information toggling (e.g. hide university text)

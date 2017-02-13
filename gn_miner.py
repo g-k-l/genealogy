@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 from pymongo import MongoClient
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-# might need to change this if you don't have default settings on MongoDB
+# might need to change this if you aren't using a local test server
 client = MongoClient('localhost',27017)
 db = client['geneology']
 tab = db['phds2']

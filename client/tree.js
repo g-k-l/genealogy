@@ -1,6 +1,6 @@
 /* INITIAL SETUP */
 
-var req_root = "https://math-genie.herokuapp.com/tree";
+var req_root = "http://localhost:7000/tree/";
 
 var margin = {
 		top: 80,
@@ -8,7 +8,7 @@ var margin = {
 		bottom: 20,
 		left: 220
 	},
-	searchResultTopMargin = 300,
+	searchResultTopMargin = 300
 	width = 1920 - margin.right - margin.left,
 	height = 980 - margin.top - margin.bottom,
 	year_depth_mult = 12;

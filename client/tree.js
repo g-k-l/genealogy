@@ -4,12 +4,13 @@ var req_root = "http://localhost:7000/tree/";
 
 var margin = {
 		top: 80,
-		right: 200,
+		right: 20,
 		bottom: 20,
-		left: 250
+		left: 220
 	},
-	width = 1900 - margin.right - margin.left,
-	height = 850 - margin.top - margin.bottom,
+	searchResultTopMargin = 300,
+	width = 1920 - margin.right - margin.left,
+	height = 980 - margin.top - margin.bottom,
 	year_depth_mult = 12;
 
 var i = 0,
@@ -20,7 +21,7 @@ var i = 0,
 var tree = d3.layout.tree()
 	.size([height, width])
 	.separation(function (a, b) {
-		return a.parent == b.parent ? 1 : 2;
+		return a.parent == b.parent ? 1 + a.depth / 6.0 : 2 + a.depth / 6.0;
 	});
 
 var diagonal = d3.svg.diagonal()
@@ -149,6 +150,9 @@ function update(source) {
 
 	// mathematician name
 	nodeEnter.append("text")
+	.attr("id", function (d) {
+		return "text_" + d.math_id;
+	})
 		.attr("class", "name")
 		.attr("x", function (d) {
 			if (d.children || d._children || d.descendants.length) {
@@ -175,7 +179,7 @@ function update(source) {
 	// university info
 	nodeEnter.append("text")
 		.attr("id", function (d) {
-			return d.math_id;
+			return "text_uni" + d.math_id;
 		})
 		.attr("x", function (d) {
 			return d.children || d._children || d.descendants.length ? -10 : 10;
@@ -215,14 +219,53 @@ function update(source) {
 		.style("fill", function (d) {
 			return (d._children || d.hidden_children) ? "lightsteelblue" : "#fff";
 		})
-		.on("mouseover", function() {
-			d3.select(this).transition().duration(duration*0.3).attr("r", 9);
+		.on("mouseover", function (d) {
+			d3.select(this)
+				.transition()
+				.duration(duration * 0.3)
+				.attr("r", 9);
+
+			var _ = d3.select(this)
+				.datum();
+
+			d3.select('#text_' + _.math_id)
+				.transition()
+				.duration(duration * 0.3)
+				.style("text-shadow", "0px 0px 0px #FFFFFF");
+
+			d3.selectAll(".link")
+				.filter(function (d, i) {
+					return d.target.math_id === _.math_id;
+				})
+				.transition()
+				.duration(duration * 0.3)
+				.style("stroke", "OrangeRed")
+				.style("stroke-width", "2px");
 		})
-		.on("mouseout", function() {
-			d3.select(this).transition().duration(duration*0.3).attr("r", 6);
+		.on("mouseout", function () {
+			d3.select(this)
+				.transition()
+				.duration(duration * 0.3)
+				.attr("r", 6);
+
+			var _ = d3.select(this)
+				.datum();
+
+			d3.select('#text_' + _.math_id)
+				.transition()
+				.duration(duration * 0.3)
+				.style("font-weight", "normal");
+
+			d3.selectAll(".link")
+				.filter(function (d, i) {
+					return d.target.math_id === _.math_id;
+				})
+				.transition()
+				.duration(duration * 0.3)
+				.style("stroke", "#ccc")
+				.style("stroke-width", "1.5px");
 		})
 		.on("click", click);
-
 
 	// Transition nodes to their new position.
 	var nodeUpdate = node.transition()
@@ -270,6 +313,9 @@ function update(source) {
 	// Enter any new links at the parent's previous position.
 	link.enter()
 		.insert("path", "g")
+		.attr("id", function (d) {
+			return "path_" + d.math_id;
+		})
 		.attr("class", "link")
 		.attr("d", function (d) {
 			var o = {
@@ -325,7 +371,7 @@ function click(d) {
 		d._children = null;
 		update(d);
 		// otherwise, load children
-	} else if (d.depth >= 3 && (d.descendants && d.descendants.length != 0)) {
+	} else if (d.depth >= 4 && (d.descendants && d.descendants.length != 0)) {
 		// reset the root to d if in too deep and more children coming
 		resetRoot(d);
 		console.log("C");
@@ -450,16 +496,24 @@ function hide_years() {
 		.remove();
 }
 
+// Handles search results. Display results as nodes.
+function createSearchResults() {
+
+}
 // Handles custom-setting root
 $('#form-root')
 	.submit(function (event) {
-		d3.xhr(req_root + 'name/' + $("#input-root")
-			.val(),
-			function (err, data) {
-				var results = JSON.parse(data.response)
-			 	tree_init(results[0].math_id);
-				// for (var i = 0; i < results.length; i++) {
-				// }
-			});
+		createSearchResults();
 		event.preventDefault();
 	});
+// .submit(function (event) {
+// 	d3.xhr(req_root + 'name/' + $("#input-root")
+// 		.val(),
+// 		function (err, data) {
+// 			var results = JSON.parse(data.response)
+// 			tree_init(results[0].math_id);
+// 			// for (var i = 0; i < results.length; i++) {
+// 			// }
+// 		});
+// 	event.preventDefault();
+// });

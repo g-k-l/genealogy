@@ -1,6 +1,6 @@
 /* INITIAL SETUP */
 
-var req_root = "http://localhost:7000/tree/";
+var req_root = "https://math-genie.herokuapp.com/tree";
 
 var margin = {
 		top: 80,

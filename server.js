@@ -11,8 +11,8 @@ var mongo_url = 'mongodb://public_reader:1234*@ds149049.mlab.com:49049/phds';
 app.use(express.static(root));
 app.use(express.static(root + "/client"));
 
-http.listen(7000, function () {
-	console.log('Listening at Port 7000');
+http.listen(80, function () {
+	console.log('Listening at Port 80');
 });
 
 // main route

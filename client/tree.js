@@ -13,8 +13,8 @@ var margin = {
 	height = 980 - margin.top - margin.bottom - searchResultTopMargin,
 	year_depth_mult = 12;
 
-if (window.innerWidth*0.9 > width) {
-	width = window.innerWidth*0.9 - margin.right - margin.left
+if (window.innerWidth> width) {
+	width = window.innerWidth - margin.right - margin.left
 }
 if (window.innerHeight*0.9 > height) {
 	height = window.innerHeight*0.9 - margin.top - margin.bottom - searchResultTopMargin
@@ -22,7 +22,7 @@ if (window.innerHeight*0.9 > height) {
 
 // set legend size in top left corner
 var legend_height = 200,
-	legend_width = 350;
+	legend_width = 200;
 
 var i = 0,
 	duration = 750,
@@ -61,6 +61,11 @@ var search_results = d3.select("svg")
 	.append("g")
 	.attr("id", "search-results")
 	.attr("transform", "translate(" + (margin.left + legend_width) + "," + margin.top/2+ ")")
+	.append("rect")
+	.attr("fill","transparent")
+	.attr("id","search-results-clickable")
+	.attr("width", window.innerWidth - margin.left - legend_width)
+	.attr("height", searchResultTopMargin)
 
 // define gradients used in this project
 var leftGradient = d3.select("svg")
@@ -290,7 +295,7 @@ function update(source) {
 				.filter(function (d, i) {
 					return d.target.math_id === _.math_id;
 				})
-				.transition()
+				.transition("link-color-change")
 				.duration(duration * 0.3)
 				.style("stroke", "#ccc")
 				.style("stroke-width", "1.5px");
@@ -344,7 +349,7 @@ function update(source) {
 	link.enter()
 		.insert("path", "g")
 		.attr("id", function (d) {
-			return "path_" + d.math_id;
+			return "path_" + d.targetmath_id;
 		})
 		.attr("class", "link")
 		.attr("d", function (d) {
@@ -544,6 +549,8 @@ function getSearchResults(input_root) {
 				if (results.length > 6) {
 					_results = results.slice(6)
 					results = results.slice(0,6)
+					d3.select('#search-results-clickable')
+						.on("click",cycleSearchResults);
 				}
 				drawSearchResults();
 			}

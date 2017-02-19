@@ -28,6 +28,16 @@
   stroke-width: 1.5px;
 }
 
+.search-nodes circle {
+  fill: #fff;
+  stroke: steelblue;
+  stroke-width: 1.5px;
+}
+
+.search-nodes text {
+  font: 12px sans-serif;
+}
+
 rect.btn {
   stroke:#fff;
   fill:#fff;

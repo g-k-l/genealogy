@@ -1,6 +1,6 @@
 /* INITIAL SETUP */
 
-var req_root = "http://localhost:7000/tree/";
+var req_root = "http://localhost:8080/tree/";
 
 var margin = {
 		top: 80,
@@ -8,10 +8,21 @@ var margin = {
 		bottom: 20,
 		left: 220
 	},
-	searchResultTopMargin = 300
+	searchResultTopMargin = 100,
 	width = 1920 - margin.right - margin.left,
-	height = 980 - margin.top - margin.bottom,
+	height = 980 - margin.top - margin.bottom - searchResultTopMargin,
 	year_depth_mult = 12;
+
+if (window.innerWidth*0.9 > width) {
+	width = window.innerWidth*0.9 - margin.right - margin.left
+}
+if (window.innerHeight*0.9 > height) {
+	height = window.innerHeight*0.9 - margin.top - margin.bottom - searchResultTopMargin
+}
+
+// set legend size in top left corner
+var legend_height = 200,
+	legend_width = 350;
 
 var i = 0,
 	duration = 750,
@@ -39,7 +50,17 @@ var tip = d3.tip()
 var svg_canvas = d3.select("body")
 	.append("svg")
 	.attr("width", width + margin.right + margin.left)
-	.attr("height", height + margin.top + margin.bottom)
+	.attr("height", height + margin.top + margin.bottom + searchResultTopMargin)
+
+var legend = d3.select("svg")
+	.append("g")
+	.attr("id", "legend")
+	.attr("transform", "translate(" + margin.left + "," + margin.top / 2 + ")")
+
+var search_results = d3.select("svg")
+	.append("g")
+	.attr("id", "search-results")
+	.attr("transform", "translate(" + (margin.left + legend_width) + "," + margin.top/2+ ")")
 
 // define gradients used in this project
 var leftGradient = d3.select("svg")
@@ -63,7 +84,8 @@ d3.select("svg")
 
 var svg = svg_canvas
 	.append("g")
-	.attr("transform", "translate(" + margin.left + "," + margin.top / 2 + ")");
+	.attr("id", "tree")
+	.attr("transform", "translate(" + margin.left + "," + (margin.top / 2 + searchResultTopMargin) + ")");
 
 // Provides backward traversal via left rectangular region
 d3.select("svg")
@@ -85,6 +107,7 @@ d3.select("svg")
 	.attr("class", "btn")
 	.attr("width", width)
 	.attr("height", margin.top / 2)
+	.attr("transform", "translate(" + margin.left + "," + searchResultTopMargin + ")")
 	.on("mouseover", function () {
 		console.log("Displaying years");
 		draw_years();
@@ -96,33 +119,40 @@ d3.select("svg")
 
 svg.call(tip);
 
-//load root of the tree.
-//klein: 7401. Gauss:18231
-function tree_init(math_id) {
+function killAll(callback) {
+	// kill everything for clean slate
+	d3.selectAll("#tree .node, #tree .link")
+		.transition()
+		.duration(duration)
+		.attr("opacity", 1e-6)
+		.remove()
 
-	d3.xhr(req_root + math_id, function (error, data) {
-		if (error) throw error;
+	callback();
+}
 
-		root = JSON.parse(data.response)[0];
+function tree_init(d) {
+		root = JSON.parse(JSON.stringify(d));
 		root.x0 = height / 2;
 		root.y0 = 0;
 
-		// kill everything for clean slate
-		d3.selectAll(".node .link")
-			.transition()
-			.duration(duration)
-			.attr("transform", "translate(" + root.y0 + "," + root.x0 + ")")
-			.attr("opacity", 1e-6)
-			.remove();
-
-		loadChildren(root);
-	});
+		killAll(function(){
+			loadChildren(root);
+		});
 }
-tree_init(18231);
+
+//load root of the tree.
+//klein: 7401. Gauss:18231
+d3.xhr(req_root + 18231, function (error, data) {
+	if (error) throw error;
+	tree_init(JSON.parse(data.response)[0]);
+});
 
 /* INTERACTIVITY */
 
 function update(source) {
+
+	// A "node" is a svg group (<g>) consisting of a mathematician data and the
+	// associating visual elements, the circles
 
 	// Compute the new tree layout.
 	var nodes = tree.nodes(root)
@@ -150,9 +180,9 @@ function update(source) {
 
 	// mathematician name
 	nodeEnter.append("text")
-	.attr("id", function (d) {
-		return "text_" + d.math_id;
-	})
+		.attr("id", function (d) {
+			return "text_" + d.math_id;
+		})
 		.attr("class", "name")
 		.attr("x", function (d) {
 			if (d.children || d._children || d.descendants.length) {
@@ -381,7 +411,7 @@ function click(d) {
 	}
 }
 
-// change the root to new_root
+// set the root to the new root and transition the associated node to the root location
 function resetRoot(new_root) {
 	root = new_root
 	root.x0 = height / 2;
@@ -463,6 +493,8 @@ function cycleChildren(d) {
 var ticks = width / year_depth_mult / 10;
 
 function draw_years() {
+	//prevent error occuring here before root is loaded
+	if (!root) return
 	if (d3.selectAll('.year-ticks')[0]
 		.length > 0) {
 		d3.selectAll('.year-ticks')
@@ -478,6 +510,7 @@ function draw_years() {
 			.attr("class", "year-ticks")
 			.attr("x", year_depth_mult * i * 10 + margin.left)
 			.attr("y", margin.top / 3)
+			.attr("transform", "translate(0," + searchResultTopMargin + ")")
 			.style('opacity', 1e-6)
 			.text(root.year_grad + i * 10)
 	}
@@ -496,24 +529,129 @@ function hide_years() {
 		.remove();
 }
 
-// Handles search results. Display results as nodes.
-function createSearchResults() {
+// This section handles search results
+var results, _results;
 
+function clickSearchResult(d){
+	tree_init(d);
 }
-// Handles custom-setting root
+
+function getSearchResults(input_root) {
+	d3.xhr(req_root + 'name/' + input_root,
+		function (err, data) {
+			results = JSON.parse(data.response);
+			if (results.length > 0) {
+				if (results.length > 6) {
+					_results = results.slice(6)
+					results = results.slice(0,6)
+				}
+				drawSearchResults();
+			}
+		});
+	event.preventDefault();
+}
+
+function drawSearchResults() {
+	var resultNodes = d3.select("#search-results")
+		.selectAll("g.node")
+		.data(results, function(d) {
+			return d.id || (d.id = i++);
+		})
+
+	var resultEnter = resultNodes.enter()
+	.append("g")
+	.attr("class","node")
+	.attr("transform", function(d) {
+		// begin at the right most side, then shifts in
+		return "translate(" + width +",0)";
+	});
+
+	resultEnter.append("circle")
+		.attr('class', 'outer')
+		.attr("r", 1e-6)
+
+	resultEnter.append("circle")
+	.attr('class', 'inner')
+	.attr("r", 1e-6)
+	.style("fill", function (d) {
+		return (d._children || d.hidden_children) ? "lightsteelblue" : "#fff";
+	})
+	.on("mouseover", function (d) {
+		d3.select(this)
+			.transition()
+			.duration(duration * 0.3)
+			.attr("r", 9);
+		})
+	.on("mouseout", function () {
+			d3.select(this)
+				.transition()
+				.duration(duration * 0.3)
+				.attr("r", 6);
+	})
+	.on("click",clickSearchResult)
+
+	resultEnter.append("text")
+		.attr("id", function (d) {
+			return "text_" + d.math_id;
+		})
+		.attr("class", "name")
+		.attr("x", -10)
+		.attr("dy", ".35em")
+		.attr("text-anchor", "end")
+		.text(function (d) {
+			return d.name;
+		})
+		.on("mouseover", tip.show)
+		.on("mouseout", tip.hide)
+		.on("click",clickSearchResult)
+		.style("fill-opacity", 1e-6);
+
+	var resultUpdate = resultNodes.transition()
+		.duration(duration*2)
+		.attr("transform", function(d) {
+			return "translate(" + ((width-legend_width-margin.right*3)*results.indexOf(d)/results.length) +",0)";
+		})
+
+	resultUpdate.select("circle.inner")
+		.attr("r", 6)
+		.style("fill", function (d) {
+			return (d._children || d.hidden_children || d.descendants.length) ? "lightsteelblue" : "#fff";
+		});
+
+	resultUpdate.select("circle.outer")
+		.attr("r", function (d) {
+			if (d.hidden_children || d.descendants.length > children_lim) return 12;
+			else return 0;
+		});
+
+	resultUpdate.selectAll("text.name")
+		.style("fill-opacity", 1);
+
+	var resultExit = resultNodes.exit()
+		.transition()
+		.duration(duration)
+		.attr("transform", function (d) {
+			return "translate(" + (width - legend_width) + ",0)";
+		})
+		.remove();
+
+	resultExit.selectAll("circle")
+		.attr("r", 1e-6);
+
+	resultExit.selectAll("text")
+		.style("fill-opacity", 1e-6);
+}
+
+function cycleSearchResults() {
+	if (!_results) return
+	_results.push(results.shift());
+	results.push(_results.shift());
+	drawSearchResults();
+}
+
 $('#form-root')
 	.submit(function (event) {
-		createSearchResults();
+		getSearchResults($("#input-root")
+			.val());
 		event.preventDefault();
 	});
-// .submit(function (event) {
-// 	d3.xhr(req_root + 'name/' + $("#input-root")
-// 		.val(),
-// 		function (err, data) {
-// 			var results = JSON.parse(data.response)
-// 			tree_init(results[0].math_id);
-// 			// for (var i = 0; i < results.length; i++) {
-// 			// }
-// 		});
-// 	event.preventDefault();
-// });

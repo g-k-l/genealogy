@@ -1,9 +1,10 @@
 # Visual Genealogy
 
 ## TODO Features
-- remove the jumbotron to make room for svg: to include search results as nodes.
-- a svg-based legend
+- hover-over circle displays the number of children a node has
+- a svg-based legend with a toggle-able box on the bottom right hand
 - add a message display for "loading..." during wait time.
+- session support (will take some investigation...)
 - side box for mathematician info (get from wikipedia) if available.
 - vertical year division in the background and properly position nodes
 - information toggling (e.g. hide university text)
@@ -13,15 +14,17 @@
 - make text more readable on hover-over
 
 ## Working Features
+- search function with display of results and cycling of results
 - children overflow + cycling function
 - root reset when the tree gets too large.
 - backward traversal by clicking on left margin
 
 ## Bugs
-- Link transition occasionally breaks when mouse moves during transition.
+- Occasional initial load failure for tree (favicon?)
 - handle text-mashing in the case of single descendant which is too close to parent in date.
 
 ## Bugs Fixed
+- Link transition occasionally breaks when mouse moves during transition.
 - need to make sure the colors are correct for nodes that have children
 - database now contains the correct graduation dates
 - fixed name stuck behind node

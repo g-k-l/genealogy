@@ -47,6 +47,14 @@ var tip = d3.tip()
 		return "<strong>Year:</strong> <span style='color:white'>" + d.year_grad + "</span>";
 	})
 
+var searchResultTip = d3.tip()
+	.attr('class','d3-tip')
+	.offset([-10,0])
+	.html(function(d) {
+		console.log(d);
+		return "<strong> Children: </strong> <span style='color:white'>" + d.descendants.length + "</span>";
+	});
+
 var svg_canvas = d3.select("body")
 	.append("svg")
 	.attr("width", width + margin.right + margin.left)
@@ -123,6 +131,7 @@ d3.select("svg")
 	});
 
 svg.call(tip);
+svg.call(searchResultTip);
 
 function killAll(callback) {
 	// kill everything for clean slate
@@ -131,8 +140,18 @@ function killAll(callback) {
 		.duration(duration)
 		.attr("opacity", 1e-6)
 		.remove()
+		.call(endall,callback);
+}
 
-	callback();
+// the function that ensures that transition is completed on all nodes before
+// callback is executed.
+function endall(transition, callback) {
+	if (typeof callback !== "function") throw new Error("Wrong callback in endall");
+	if (transition.size() === 0) { callback() }
+	var n = 0;
+	transition
+			.each(function() { ++n; })
+			.each("end", function() { if (!--n) callback.apply(this, arguments); });
 }
 
 function tree_init(d) {
@@ -495,7 +514,7 @@ function cycleChildren(d) {
 }
 
 // This portion handles the x-axis year-ticks
-var ticks = width / year_depth_mult / 10;
+var ticks = width / year_depth_mult / 10 -1;
 
 function draw_years() {
 	//prevent error occuring here before root is loaded
@@ -588,12 +607,14 @@ function drawSearchResults() {
 			.transition()
 			.duration(duration * 0.3)
 			.attr("r", 9);
+		searchResultTip.show(d);
 		})
-	.on("mouseout", function () {
+	.on("mouseout", function (d) {
 			d3.select(this)
 				.transition()
 				.duration(duration * 0.3)
 				.attr("r", 6);
+			searchResultTip.hide(d);
 	})
 	.on("click",clickSearchResult)
 
@@ -661,4 +682,5 @@ $('#form-root')
 		getSearchResults($("#input-root")
 			.val());
 		event.preventDefault();
+		$("#input-root").val('')
 	});

@@ -47,7 +47,7 @@ var tip = d3.tip()
 		return "<strong>Year:</strong> <span style='color:white'>" + d.year_grad + "</span>";
 	})
 
-var searchResultTip = d3.tip()
+var childrenTip = d3.tip()
 	.attr('class','d3-tip')
 	.offset([-10,0])
 	.html(function(d) {
@@ -130,12 +130,12 @@ d3.select("svg")
 	});
 
 svg.call(tip);
-svg.call(searchResultTip);
+svg.call(childrenTip);
 
 function killAll(callback) {
 	// kill everything for clean slate
-	d3.selectAll("#tree .node, #tree .link")
-		.transition()
+	d3.selectAll("#tree .node, #tree .link, .year-ticks")
+		.transition("killAll")
 		.duration(duration)
 		.attr("opacity", 1e-6)
 		.remove()
@@ -160,9 +160,8 @@ function tree_init(d) {
 
 		killAll(function(){
 			loadChildren(root);
+			init_years();
 		});
-
-		init_years();
 }
 
 //load root of the tree.
@@ -473,7 +472,7 @@ function resetRoot(new_root) {
 
 // load descendants information
 // the maximum number of children displayed is set by children_lim
-// having processed the node, set d.descendants to null
+// having processed the node, set d.descendants to []
 function loadChildren(d) {
 	if (d.descendants.length === 0) return;
 
@@ -520,6 +519,7 @@ var n_ticks = width / year_depth_mult / 10 -1;
 function init_years() {
 	//prevent error occuring here before root is loaded
 	if (!root) return;
+
 	// enter a year tick, transition it to the correct spot
 	for (var i = 0; i < n_ticks; i++) {
 		var xloc = year_depth_mult * i * 10 + margin.left,
@@ -533,7 +533,7 @@ function init_years() {
 			.attr("transform", "translate(0," + searchResultTopMargin + ")")
 			.style('opacity', 1e-6)
 			.text(root.year_grad + i * 10)
-			.transition()
+			.transition("init-years")
 			.duration(duration)
 			.attr("x", xloc)
 			.attr("y", yloc)
@@ -612,14 +612,14 @@ function drawSearchResults() {
 			.transition()
 			.duration(duration * 0.3)
 			.attr("r", 9);
-		searchResultTip.show(d);
+		childrenTip.show(d);
 		})
 	.on("mouseout", function (d) {
 		d3.select(this)
 			.transition()
 			.duration(duration * 0.3)
 			.attr("r", 6);
-		searchResultTip.hide(d);
+		childrenTip.hide(d);
 	})
 	.on("click",clickSearchResult)
 

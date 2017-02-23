@@ -1,7 +1,6 @@
 # Visual Genealogy
 
 ## TODO Features
-- hover-over circle displays the number of children a node has
 - a svg-based legend with a toggle-able box on the bottom right hand
 - add a message display for "loading..." during wait time.
 - session support (will take some investigation...)
@@ -14,6 +13,7 @@
 - make text more readable on hover-over
 
 ## Working Features
+- hover-over circle displays the number of children a node has
 - search function with display of results and cycling of results
 - children overflow + cycling function
 - root reset when the tree gets too large.

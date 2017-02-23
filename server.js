@@ -8,12 +8,25 @@ var MongoClient = require('mongodb')
 var root = __dirname;
 var mongo_url = 'mongodb://public_reader:1234*@ds149049.mlab.com:49049/phds';
 
+// redirects www to non-www
+function wwwRedirect(req, res, next) {
+    if (req.headers.host.slice(0, 4) === 'www.') {
+        var newHost = req.headers.host.slice(4);
+				console.log(req.originalUrl);
+        return res.redirect(301, req.protocol + '://' + newHost + req.originalUrl);
+    }
+    next();
+};
+
+app.set('trust proxy', true);
+app.use(wwwRedirect);
 app.use(express.static(root));
 app.use(express.static(root + "/client"));
 
 http.listen(8080, function () {
 	console.log('Listening at Port 8080');
 });
+
 
 // main route
 app.route('/')
@@ -22,7 +35,7 @@ app.route('/')
 	});
 
 // obtains the info of phd with the speicified math_ids from the database
-// returns an array of json docs
+// returns an array of json docs, each is a phd
 app.route("/tree/:math_ids")
 	.get(function (req, res) {
 		MongoClient.connect(mongo_url, function (err, db) {
@@ -57,6 +70,7 @@ app.route("/tree/:math_ids")
 		});
 	});
 
+// search the database by phd name
 app.route("/tree/name/:root_name")
 	.get(function (req, res) {
 		MongoClient.connect(mongo_url, function (err, db) {

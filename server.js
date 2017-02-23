@@ -1,3 +1,5 @@
+const session = require('express-session');
+const MongoSessionStore = require('connect-mongo')(session);
 var express = require('express');
 var app = express();
 var http = require('http')
@@ -6,7 +8,7 @@ var path = require('path')
 var MongoClient = require('mongodb')
 	.MongoClient
 var root = __dirname;
-var mongo_url = 'mongodb://public_reader:1234*@ds149049.mlab.com:49049/phds';
+var mongo_uri = 'mongodb://public_reader:1234*@ds149049.mlab.com:49049/phds';
 
 // redirects www to non-www
 function wwwRedirect(req, res, next) {
@@ -20,6 +22,9 @@ function wwwRedirect(req, res, next) {
 
 app.set('trust proxy', true);
 app.use(wwwRedirect);
+app.use(session({
+	secret: "dirtylittlesecret"
+}))
 app.use(express.static(root));
 app.use(express.static(root + "/client"));
 
@@ -27,38 +32,32 @@ http.listen(8080, function () {
 	console.log('Listening at Port 8080');
 });
 
-
 // main route
 app.route('/')
 	.get(function (req, res) {
 		res.sendFile(root + '/client/tree.html')
 	});
 
-// obtains the info of phd with the speicified math_ids from the database
-// returns an array of json docs, each is a phd
-app.route("/tree/:math_ids")
-	.get(function (req, res) {
-		MongoClient.connect(mongo_url, function (err, db) {
-			if (err) console.log(err);
+// DB related routes here
+MongoClient.connect(mongo_uri, function(err, db) {
+	if (err) console.log(err);
+	var col = db.collection("phds2");
+	// obtains the info of phd with the speicified math_ids from the database
+	// returns an array of json docs, each is a phd
+	app.route("/tree/:math_ids")
+		.get(function (req, res) {
 			try {
-				var id_array = req.params.math_ids.split(',')
-					.map(Number);
-			} catch (e) {
-				res.json({
-					'msg': "parseInt failed. Error: " + e
-				});
-				return
+				var id_array = req.params.math_ids.split(',').map(Number);
 			}
-			var col = db.collection("phds2");
-			col.find({
-					"math_id": {
-						$in: id_array
-					}
-				})
+			catch (e) {
+				res.json({'msg': "parseInt failed. Error: " + e});
+				return;
+			}
+			col.find({"math_id": {$in: id_array}})
 				.toArray(function (err, items) {
 					if (err) throw err;
 					var unique_ids = [],
-						uniques = [];
+							uniques = [];
 					for (var i = 0; i < items.length; i++) {
 						if (!unique_ids.includes(items[i].math_id)) {
 							unique_ids.push(items[i].math_id);
@@ -68,31 +67,22 @@ app.route("/tree/:math_ids")
 					res.json(uniques);
 				});
 		});
-	});
 
-// search the database by phd name
-app.route("/tree/name/:root_name")
-	.get(function (req, res) {
-		MongoClient.connect(mongo_url, function (err, db) {
-			if (err) console.log(err);
-			var col = db.collection("phds2");
-			col.find({
-					"name": {
-						$regex: req.params.root_name
-					}
-				})
-				.toArray(function (err, items) {
-					if (err) throw err;
-					var unique_ids = [],
-						uniques = [];
-					for (var i = 0; i < items.length; i++) {
-						if (!unique_ids.includes(items[i].math_id)) {
-							unique_ids.push(items[i].math_id);
-							uniques.push(items[i]);
-						}
-					}
-					console.log(uniques);
-					res.json(uniques);
-				});
-		})
-	});
+	// search the database by phd name
+	app.route("/tree/name/:root_name")
+		.get(function (req, res) {
+					col.find({"name": {$regex: req.params.root_name}})
+						.toArray(function (err, items) {
+							if (err) throw err;
+							var unique_ids = [],
+								uniques = [];
+							for (var i = 0; i < items.length; i++) {
+								if (!unique_ids.includes(items[i].math_id)) {
+									unique_ids.push(items[i].math_id);
+									uniques.push(items[i]);
+								}
+							}
+							res.json(uniques);
+						});
+			});
+});

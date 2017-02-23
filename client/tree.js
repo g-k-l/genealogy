@@ -109,6 +109,8 @@ d3.select("svg")
 		console.log("Parent Reset Triggered");
 		if (root.parent) {
 			root = root.parent;
+			remove_years();
+			init_years();
 			update(root);
 		}
 	});
@@ -442,6 +444,9 @@ function resetRoot(new_root) {
 	root.y0 = 0;
 	root.depth = 0;
 
+	remove_years();
+	init_years();
+
 	var non_root_nodes = d3.selectAll('.node, .link')
 		.filter(function (d, i) {
 			return d.math_id != root.math_id;
@@ -556,6 +561,14 @@ function hide_years() {
 		.delay(duration * 4)
 		.duration(duration)
 		.style('opacity', 1e-6)
+}
+
+function remove_years() {
+	d3.selectAll(".year-ticks")
+		.transition('remove-year-ticks')
+		.duration(duration)
+		.style('opacity', 1e-6)
+		.remove();
 }
 
 // This section handles search results

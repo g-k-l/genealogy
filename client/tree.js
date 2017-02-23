@@ -51,7 +51,6 @@ var searchResultTip = d3.tip()
 	.attr('class','d3-tip')
 	.offset([-10,0])
 	.html(function(d) {
-		console.log(d);
 		return "<strong> Children: </strong> <span style='color:white'>" + d.descendants.length + "</span>";
 	});
 
@@ -123,7 +122,7 @@ d3.select("svg")
 	.attr("transform", "translate(" + margin.left + "," + searchResultTopMargin + ")")
 	.on("mouseover", function () {
 		console.log("Displaying years");
-		draw_years();
+		show_years();
 	})
 	.on("mouseout", function () {
 		console.log("Hiding years");
@@ -162,6 +161,8 @@ function tree_init(d) {
 		killAll(function(){
 			loadChildren(root);
 		});
+
+		init_years();
 }
 
 //load root of the tree.
@@ -514,33 +515,38 @@ function cycleChildren(d) {
 }
 
 // This portion handles the x-axis year-ticks
-var ticks = width / year_depth_mult / 10 -1;
+var n_ticks = width / year_depth_mult / 10 -1;
 
-function draw_years() {
+function init_years() {
 	//prevent error occuring here before root is loaded
-	if (!root) return
-	if (d3.selectAll('.year-ticks')[0]
-		.length > 0) {
-		d3.selectAll('.year-ticks')
-			.transition()
-			.duration(duration / 2)
-			.style('opacity', 1);
-		return;
-	}
-	for (var i = 0; i < ticks; i++) {
+	if (!root) return;
+	// enter a year tick, transition it to the correct spot
+	for (var i = 0; i < n_ticks; i++) {
+		var xloc = year_depth_mult * i * 10 + margin.left,
+				yloc = margin.top / 3;
 		d3.select('svg')
 			.append("text")
 			.attr("text-anchor", "end")
 			.attr("class", "year-ticks")
-			.attr("x", year_depth_mult * i * 10 + margin.left)
+			.attr("x", 0)
 			.attr("y", margin.top / 3)
 			.attr("transform", "translate(0," + searchResultTopMargin + ")")
 			.style('opacity', 1e-6)
 			.text(root.year_grad + i * 10)
+			.transition()
+			.duration(duration)
+			.attr("x", xloc)
+			.attr("y", yloc)
+			.style('opacity', 1)
 	}
-	d3.selectAll(".year-ticks")
+
+	hide_years();
+}
+
+function show_years() {
+	d3.selectAll('.year-ticks')
 		.transition()
-		.duration(duration)
+		.duration(duration / 2)
 		.style('opacity', 1);
 }
 
@@ -550,7 +556,6 @@ function hide_years() {
 		.delay(duration * 4)
 		.duration(duration)
 		.style('opacity', 1e-6)
-		.remove();
 }
 
 // This section handles search results
@@ -610,11 +615,11 @@ function drawSearchResults() {
 		searchResultTip.show(d);
 		})
 	.on("mouseout", function (d) {
-			d3.select(this)
-				.transition()
-				.duration(duration * 0.3)
-				.attr("r", 6);
-			searchResultTip.hide(d);
+		d3.select(this)
+			.transition()
+			.duration(duration * 0.3)
+			.attr("r", 6);
+		searchResultTip.hide(d);
 	})
 	.on("click",clickSearchResult)
 

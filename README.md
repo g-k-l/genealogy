@@ -7,9 +7,12 @@
 - side box for mathematician info (get from wikipedia) if available.
 - add a message display for "loading..." during wait time.
 
+## Organization
+- factor out style and place them in CSS instead (use classes)
+
 ## TODO UI Features
-- change text color on hover-over
-- make text more readable on hover-over
+- delayed transition while path is being highlighted
+- make text more readable on hover-over (by adding background rectangle)
 - vertical year division in the background and properly position nodes
 
 ## Working Features
@@ -20,7 +23,7 @@
 - backward traversal by clicking on left margin
 
 ## Bugs
-- Occasional initial load failure for tree (favicon?)
+- Occasional initial load failure for tree (favicon? But sometimes there is no error at all?)
 - handle text-mashing in the case of single descendant which is too close to parent in date.
 
 ## Bugs Fixed

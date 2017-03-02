@@ -200,6 +200,9 @@ function update(source) {
 	var nodeEnter = node.enter()
 		.append("g")
 		.attr("class", "node")
+		.attr("id", function(d) {
+			return "g_" + d.math_id;
+		})
 		.attr("transform", function (d) {
 			return "translate(" + source.y0 + "," + source.x0 + ")";
 		});
@@ -207,7 +210,7 @@ function update(source) {
 	// mathematician name
 	nodeEnter.append("text")
 		.attr("id", function (d) {
-			return "text_" + d.math_id;
+			return "name_" + d.math_id;
 		})
 		.attr("class", "name")
 		.attr("x", function (d) {
@@ -275,52 +278,8 @@ function update(source) {
 		.style("fill", function (d) {
 			return (d._children || d.hidden_children) ? "lightsteelblue" : "#fff";
 		})
-		.on("mouseover", function (d) {
-			d3.select(this)
-				.transition()
-				.duration(duration * 0.3)
-				.attr("r", 9);
-
-			var _ = d3.select(this)
-				.datum();
-
-			d3.select('#text_' + _.math_id)
-				.transition()
-				.duration(duration * 0.3)
-				.style("text-shadow", "0px 0px 0px #FFFFFF");
-
-			d3.selectAll(".link")
-				.filter(function (d, i) {
-					return d.target.math_id === _.math_id;
-				})
-				.transition()
-				.duration(duration * 0.3)
-				.style("stroke", "OrangeRed")
-				.style("stroke-width", "2px");
-		})
-		.on("mouseout", function () {
-			d3.select(this)
-				.transition()
-				.duration(duration * 0.3)
-				.attr("r", 6);
-
-			var _ = d3.select(this)
-				.datum();
-
-			d3.select('#text_' + _.math_id)
-				.transition()
-				.duration(duration * 0.3)
-				.style("font-weight", "normal");
-
-			d3.selectAll(".link")
-				.filter(function (d, i) {
-					return d.target.math_id === _.math_id;
-				})
-				.transition("link-color-change")
-				.duration(duration * 0.3)
-				.style("stroke", "#ccc")
-				.style("stroke-width", "1.5px");
-		})
+		.on("mouseover", circleMouseOver)
+		.on("mouseout", circleMouseOut)
 		.on("click", click);
 
 	// Transition nodes to their new position.
@@ -370,7 +329,7 @@ function update(source) {
 	link.enter()
 		.insert("path", "g")
 		.attr("id", function (d) {
-			return "path_" + d.targetmath_id;
+			return "link_" + d.target.math_id;
 		})
 		.attr("class", "link")
 		.attr("d", function (d) {
@@ -693,6 +652,57 @@ function cycleSearchResults() {
 	_results.push(results.shift());
 	results.push(_results.shift());
 	drawSearchResults();
+}
+
+function circleMouseOver(d) {
+	// highlight the circles connected
+	d3.select("#g_"+d.math_id)
+		.select(".inner")
+		.transition("#g_"+d.math_id)
+		.duration(duration * 0.3)
+		.attr("r", 9);
+
+	d3.select("#name_"+d.math_id)
+		.transition("#name_"+d.math_id)
+		.duration(duration*0.1)
+		.style("font-size","14px")
+
+	// select the link for which this circle is the target and change its color
+	d3.select("#link_"+d.math_id)
+		.transition("#link_"+d.math_id)
+		.duration(duration * 0.3)
+		.style("stroke", "OrangeRed")
+		.style("stroke-width", "2px");
+
+	// bubble upwards
+	if (d.parent) {
+		circleMouseOver(d.parent);
+	}
+}
+
+function circleMouseOut(d) {
+	d3.select("#g_"+d.math_id)
+		.select(".inner")
+		.transition("#g_"+d.math_id)
+		.duration(duration * 0.3)
+		.attr("r", 6);
+
+	d3.select("#name_"+d.math_id)
+		.transition("#name_"+d.math_id)
+		.duration(duration*0.3)
+		.style("font-size","12px")
+
+	// select the link for which this circle is the target and change its color
+	d3.select("#link_"+d.math_id)
+		.transition("#link_"+d.math_id)
+		.duration(duration * 0.3)
+		.style("stroke", "#ccc")
+		.style("stroke-width", "1.5px");
+
+	// bubble upwards
+	if (d.parent) {
+		circleMouseOut(d.parent);
+	}
 }
 
 $('#form-root')

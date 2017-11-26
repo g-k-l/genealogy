@@ -1,11 +1,9 @@
 var config = require('config')
 var express = require('express');
 var app = express();
-var http = require('http')
-	.Server(app);
+// var http = require('http').Server(app);
 var path = require('path')
-var MongoClient = require('mongodb')
-	.MongoClient
+var MongoClient = require('mongodb').MongoClient
 var root = __dirname;
 var mongo_uri = config.get('mongo_uri');
 
@@ -24,9 +22,7 @@ app.use(wwwRedirect);
 app.use(express.static(root));
 app.use(express.static(root + "/client"));
 
-http.listen(8080, function () {
-	console.log('Listening at Port 8080');
-});
+
 
 // main route
 app.route('/')
@@ -81,4 +77,8 @@ MongoClient.connect(mongo_uri, function(err, db) {
 							res.json(uniques);
 						});
 			});
+});
+
+app.listen(8080, function () {
+	console.log('Listening at Port 8080');
 });

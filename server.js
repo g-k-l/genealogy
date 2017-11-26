@@ -1,75 +1,51 @@
-var config = require("./config/config")
 var express = require('express')
 var app = express()
 var path = require('path')
-var MongoClient = require('mongodb').MongoClient
-var root = __dirname;
-var mongo_uri = config.mongo_uri;
+var mongo = require("./lib/mongo")
 var utils = require("./lib/utils")
+var collection_utils = require("./lib/collection_utils")
+var config = require("./config/config")
 
 app.set('trust proxy', true);
 app.use(utils.wwwRedirect);
-app.use(express.static(root));
-app.use(express.static(root + "/client"));
+app.use(express.static(__dirname));
+app.use(express.static(__dirname + "/client"));
 
-// main route
 app.route('/').get(
 	function(req, res) {
-		res.sendFile(root + '/client/tree.html')
+		res.sendFile(__dirname + '/client/tree.html')
 	}
 );
 
-// DB related routes here
-MongoClient.connect(mongo_uri, function(err, db) {
-	if (err) console.log(err);
-	var col = db.collection("phds2")
-		// obtains the info of phd with the speicified math_ids from the database
-		// returns an array of json docs, each is a phd
-	app.route(
-		"/tree/:math_ids"
-	).get(function(req, res) {
+app.route("/tree/:math_ids").get(
+	function(req, res) {
 		try {
-			var id_array = req.params.math_ids.split(',').map(Number)
-		} catch (e) {
-			res.json({
-				'msg': "parseInt failed. Error: " + e
+			var id_array = req.params.math_ids.split(',').map(Number);
+			collection_utils.fetchById(id_array, function(items){
+				res.json(items)
 			})
-			return
 		}
-		col.find({
-				"math_id": {
-					$in: id_array
-				}
-			})
-			.toArray(function(err, items) {
-				if (err) {
-					throw err
-				} else {
-					uniques = utils.uniquify(items)
-				}
-				res.json(uniques);
-			});
-	});
+		catch (e) {
+			res.json({'msg': "parseInt failed. Error: " + e});
+		}
+	}
+)
 
-	// search the database by phd name
-	app.route("/tree/name/:root_name")
-		.get(function(req, res) {
-			col.find({
-					"name": {
-						$regex: req.params.root_name
-					}
-				})
-				.toArray(function(err, items) {
-					if (err) {
-						throw err
-					} else {
-						uniques = utils.uniquify(items)
-						res.json(uniques);
-					}
-				});
-		});
-});
+app.route("/tree/name/:root_name").get(
+	function(req, res) {
+		collection_utils.fetchByName(req.params.root_name, function(items){
+			res.json(items)
+		})
+	}
+)
 
-app.listen(8080, function() {
-	console.log('Listening at Port 8080');
-});
+// start app here
+var collection;
+mongo.connect(function(database) {
+	mongodb = database
+	collection = mongodb.collection("phds2")
+	collection_utils = collection_utils.init(collection)
+	app.listen(config.port, function() {
+		console.log('Listening at Port ' + config.port);
+	})
+})

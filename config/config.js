@@ -1,5 +1,5 @@
 var dotenv = require("dotenv").config()
-var port = 80
+var port = process.env.PORT
 if (process.env.ENVIRONMENT != "PRODUCTION") {
 	port = 8080
 } 

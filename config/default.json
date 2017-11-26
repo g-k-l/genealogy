@@ -1,0 +1,5 @@
+{
+
+	"mongo_uri": "mongodb://public_reader:1234*@ds149049.mlab.com:49049/phds"
+
+}

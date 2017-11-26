@@ -1,5 +1,4 @@
-const session = require('express-session');
-const MongoSessionStore = require('connect-mongo')(session);
+var config = require('config')
 var express = require('express');
 var app = express();
 var http = require('http')
@@ -8,7 +7,7 @@ var path = require('path')
 var MongoClient = require('mongodb')
 	.MongoClient
 var root = __dirname;
-var mongo_uri = 'mongodb://public_reader:1234*@ds149049.mlab.com:49049/phds';
+var mongo_uri = config.get('mongo_uri');
 
 // redirects www to non-www
 function wwwRedirect(req, res, next) {
@@ -22,9 +21,6 @@ function wwwRedirect(req, res, next) {
 
 app.set('trust proxy', true);
 app.use(wwwRedirect);
-app.use(session({
-	secret: "dirtylittlesecret"
-}))
 app.use(express.static(root));
 app.use(express.static(root + "/client"));
 

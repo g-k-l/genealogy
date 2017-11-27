@@ -497,8 +497,6 @@ function init_years() {
 			.attr("y", yloc)
 			.style('opacity', 1)
 	}
-
-	hide_years();
 }
 
 function show_years() {
@@ -506,14 +504,6 @@ function show_years() {
 		.transition()
 		.duration(duration / 2)
 		.style('opacity', 1);
-}
-
-function hide_years() {
-	d3.selectAll(".year-ticks")
-		.transition()
-		.delay(duration * 4)
-		.duration(duration)
-		.style('opacity', 1e-6)
 }
 
 function remove_years() {

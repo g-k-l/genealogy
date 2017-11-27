@@ -3,12 +3,12 @@
 var req_root = "/tree/";
 
 var margin = {
-		top: 80,
+		top: 20,
 		right: 20,
 		bottom: 20,
 		left: 220
 	},
-	searchResultTopMargin = 100,
+	searchResultTopMargin = 60,
 	width = window.innerWidth - margin.right - margin.left,
 	height = window.innerHeight*0.9 - margin.top - margin.bottom - searchResultTopMargin,
 	year_depth_mult = 12;

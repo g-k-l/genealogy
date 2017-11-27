@@ -18,8 +18,12 @@
   stroke-width: 1.5px;
 }
 
-.node text {
-  font: 12px sans-serif;
+text.name {
+  font-size: 12px;
+}
+
+text.school {
+  font-size: 10px;
 }
 
 .link {
@@ -58,8 +62,9 @@ rect.btn {
   border-radius: 2px;
 }
 
-#genealogy-tree {
+#the-tree {
   width: auto;
   height: auto;
+  overflow: scroll;
 
 }

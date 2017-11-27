@@ -1,21 +1,22 @@
 /* INITIAL SETUP */
 
 var req_root = "/tree/";
-
 var margin = {
 		top: 20,
-		right: 20,
-		bottom: 20,
-		left: 220
+		right: 100,
+		bottom: 100,
+		left: 100
 	},
 	searchResultTopMargin = 60,
-	width = window.innerWidth - margin.right - margin.left,
-	height = window.innerHeight*0.9 - margin.top - margin.bottom - searchResultTopMargin,
-	year_depth_mult = 12;
+	legend_height = 200,
+	legend_width = 200,
+	max_depth = 6;
 
-// set legend size in top left corner
-var legend_height = 200,
-	legend_width = 200;
+var	width = window.innerWidth,
+	height = window.innerHeight - margin.top - margin.bottom - legend_height,
+	years_per_tick = 25,
+	n_ticks = 10,
+	tick_width = width / n_ticks;
 
 var i = 0,
 	duration = 750,
@@ -47,11 +48,11 @@ var childrenTip = d3.tip()
 		return "<strong> Children: </strong> <span style='color:white'>" + d.descendants.length + "</span>";
 	});
 
-var svg_canvas = d3.select("body")
+var svg_canvas = d3.select("#the-tree")
 	.append("svg")
 	.attr("id", "genealogy-tree")
-	.attr("width", width + margin.right + margin.left)
-	.attr("height", height + margin.top + margin.bottom + searchResultTopMargin)
+	.attr("width", width)
+	.attr("height", height + margin.bottom)
 
 var legend = d3.select("svg")
 	.append("g")
@@ -80,13 +81,6 @@ leftGradient.append('stop')
 leftGradient.append('stop')
 	.attr("offset", "95%")
 	.attr("stop-color", "#FFFFFF");
-
-d3.select("svg")
-	.append("rect")
-	.attr("width", margin.left * 0.75)
-	.attr("height", height)
-	.attr("fill-opacity", 1)
-	.attr("fill", "url(#leftGradient)");
 
 var svg = svg_canvas
 	.append("g")
@@ -119,14 +113,20 @@ d3.select("svg")
 	.on("mouseover", function () {
 		console.log("Displaying years");
 		show_years();
-	})
-	.on("mouseout", function () {
-		console.log("Hiding years");
-		hide_years();
 	});
 
 svg.call(tip);
 svg.call(childrenTip);
+
+function compute_single_depth_year(d) {
+	var children = d.children,
+		max = years_per_tick;
+	for(i=0; i<children.length; i++) {
+		console.log(children[i].year_grad - d.year_grad)
+		max = Math.max(max, (children[i].year_grad - d.year_grad) / 2)
+	}
+	return max
+}
 
 function killAll(callback) {
 	// kill everything for clean slate
@@ -150,14 +150,14 @@ function endall(transition, callback) {
 }
 
 function tree_init(d) {
-		root = JSON.parse(JSON.stringify(d));
-		root.x0 = height / 2;
-		root.y0 = 0;
-
-		killAll(function(){
-			loadChildren(root);
-			init_years();
-		});
+	root = JSON.parse(JSON.stringify(d));
+	root.name = shorten_name(root.name)
+	root.x0 = height / 2;
+	root.y0 = 0;
+	killAll(function(){
+		loadChildren(root);
+		init_years();
+	});
 }
 
 //load root of the tree.
@@ -168,6 +168,10 @@ d3.xhr(req_root + 18231, function (error, data) {
 });
 
 /* INTERACTIVITY */
+
+function compute_node_y(d) {
+	return d.year_grad ? (d.year_grad - root.year_grad) * tick_width / years_per_tick : d.parent.y + tick_width;
+}
 
 function update(source) {
 
@@ -180,8 +184,9 @@ function update(source) {
 		links = tree.links(nodes);
 
 	// adjust depth by year_grad
+	// need to compute years_per_tick. Each level's can only take up at most 2 ticks
 	nodes.forEach(function (d) {
-		d.y = d.year_grad ? (d.year_grad - root.year_grad) * year_depth_mult : d.parent.y + year_depth_mult;
+		d.y = compute_node_y(d)
 	});
 
 	// Update the nodes…
@@ -234,6 +239,7 @@ function update(source) {
 		.attr("id", function (d) {
 			return "text_uni" + d.math_id;
 		})
+		.attr("class", "school")
 		.attr("x", function (d) {
 			return d.children || d._children || d.descendants.length ? -10 : 10;
 		})
@@ -380,7 +386,7 @@ function click(d) {
 		d._children = null;
 		update(d);
 		// otherwise, load children
-	} else if (d.depth >= 4 && (d.descendants && d.descendants.length != 0)) {
+	} else if (d.depth >= max_depth && (d.descendants && d.descendants.length != 0)) {
 		// reset the root to d if in too deep and more children coming
 		resetRoot(d);
 		console.log("C");
@@ -428,6 +434,11 @@ function resetRoot(new_root) {
 	}
 }
 
+function shorten_name(full_name) {
+	var names = full_name.split(" ")
+	return [names[0][0] + ".", names[names.length-1]].join(" ")
+}
+
 // load descendants information
 // the maximum number of children displayed is set by children_lim
 // having processed the node, set d.descendants to []
@@ -440,16 +451,19 @@ function loadChildren(d) {
 		.reduce(function (a, b) {
 			return a.toString() + ',' + b.toString();
 		});
+	console.log(req_str)
 	d3.xhr(req_str, function (error, data) {
 		if (error) throw error;
-
 		// sort children by year_grad
 		d.children = JSON.parse(data.response)
 			.sort(function (a, b) {
 				if (b.year_grad - a.year_grad != 0) return b.year_grad - a.year_grad
 				else return b.math_id - a.math_id;
 			});
-
+		var i;
+		for (i=0; i<d.children.length; i++) {
+			d.children[i].name = shorten_name(d.children[i].name)
+		}
 		// hide some children if there are too many
 		if (d.children.length > children_lim) {
 			d.hidden_children = d.children.slice(children_lim);
@@ -472,16 +486,14 @@ function cycleChildren(d) {
 }
 
 // This portion handles the x-axis year-ticks
-var n_ticks = width / year_depth_mult / 10 -1;
-
 function init_years() {
 	//prevent error occuring here before root is loaded
 	if (!root) return;
 
 	// enter a year tick, transition it to the correct spot
 	for (var i = 0; i < n_ticks; i++) {
-		var xloc = year_depth_mult * i * 10 + margin.left,
-				yloc = margin.top / 3;
+		var xloc = tick_width * i + margin.left,
+			yloc = margin.top / 3;
 		d3.select('svg')
 			.append("text")
 			.attr("text-anchor", "end")
@@ -490,7 +502,7 @@ function init_years() {
 			.attr("y", margin.top / 3)
 			.attr("transform", "translate(0," + searchResultTopMargin + ")")
 			.style('opacity', 1e-6)
-			.text(root.year_grad + i * 10)
+			.text(root.year_grad + i * years_per_tick)
 			.transition("init-years")
 			.duration(duration)
 			.attr("x", xloc)
@@ -528,7 +540,7 @@ function getSearchResults(input_root) {
 			if (results.length > 0) {
 				if (results.length > 6) {
 					_results = results.slice(6)
-					results = results.slice(0,6)
+					results = results.slice(0, 6)
 					d3.select('#search-results-clickable')
 						.on("click",cycleSearchResults);
 				}
@@ -581,7 +593,7 @@ function drawSearchResults() {
 
 	resultEnter.append("text")
 		.attr("id", function (d) {
-			return "text_" + d.math_id;
+			return "name_" + d.math_id;
 		})
 		.attr("class", "name")
 		.attr("x", -10)

@@ -46,7 +46,7 @@ rect.btn {
 }
 
 .year-ticks {
-  font: 12px sans-serif;
+  font: 14px sans-serif;
 }
 
 .d3-tip {
@@ -56,4 +56,10 @@ rect.btn {
   background: grey;
   color: #fff;
   border-radius: 2px;
+}
+
+#genealogy-tree {
+  width: auto;
+  height: auto;
+
 }

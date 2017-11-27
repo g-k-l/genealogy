@@ -9,16 +9,9 @@ var margin = {
 		left: 220
 	},
 	searchResultTopMargin = 100,
-	width = 1920 - margin.right - margin.left,
-	height = 980 - margin.top - margin.bottom - searchResultTopMargin,
+	width = window.innerWidth - margin.right - margin.left,
+	height = window.innerHeight*0.9 - margin.top - margin.bottom - searchResultTopMargin,
 	year_depth_mult = 12;
-
-if (window.innerWidth> width) {
-	width = window.innerWidth - margin.right - margin.left
-}
-if (window.innerHeight*0.9 > height) {
-	height = window.innerHeight*0.9 - margin.top - margin.bottom - searchResultTopMargin
-}
 
 // set legend size in top left corner
 var legend_height = 200,
@@ -56,6 +49,7 @@ var childrenTip = d3.tip()
 
 var svg_canvas = d3.select("body")
 	.append("svg")
+	.attr("id", "genealogy-tree")
 	.attr("width", width + margin.right + margin.left)
 	.attr("height", height + margin.top + margin.bottom + searchResultTopMargin)
 

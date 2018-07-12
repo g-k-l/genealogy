@@ -85,19 +85,31 @@ function rotate_text(d) {
 	}
 }
 
-
 function to_comma_delimited_str(arr) {
 	return arr.reduce(function(a, b) {
 		return a.toString() + "," + b.toString();
 	});
 }
 
+function uniquify(arr, key) {
+	var i;
+	var hashmap = {}
+	for(i=0; i<arr.length;i++ ) {
+		hashmap[arr[i][key]] = arr[i]
+	}
+	return Object.values(hashmap)
+}
 
 function draw_tree(data) {
-	var stratifed = d3.stratify()
-		.id(function(d) { return d.math_id })
-		.parentId(function(d) { return d.parent_id })
-		(data)
+	var stratifed = d3
+		.stratify()
+		.id(function(d) {
+			return d.math_id;
+		})
+		.parentId(function(d) {
+			console.log(d)
+			return d.parent_id;
+		})(data);
 
 	root = d3.hierarchy(stratifed);
 	tree(root);
@@ -110,8 +122,7 @@ function draw_tree(data) {
 		.attr("class", "link")
 		.attr(
 			"d",
-			d3
-				.linkRadial()
+			d3.linkRadial()
 				.angle(function(d) {
 					return d.x;
 				})
@@ -143,7 +154,9 @@ function draw_tree(data) {
 		.attr("class", "name")
 		.attr("transform", rotate_text)
 		.text(function(d) {
-			return d.data.name;
+			// last name only
+			var name_parts = d.data.data.name.split(" ");
+			return name_parts[name_parts.length - 1];
 		});
 }
 
@@ -161,28 +174,35 @@ function fetch_data(math_ids, depth, parent_id) {
 		return;
 	}
 	return d3.json(REQUEST_ROOT + math_ids).then(function(data) {
-		return_data = return_data.concat(data)
+		return_data = return_data.concat(data);
 		var i;
 		var promises = [];
 		for (i = 0; i < data.length; i++) {
 			var node_data = data[i];
-			node_data.parent_id = parent_id
+			node_data.parent_id = parent_id;
 			if (node_data.descendants.length > 0) {
 				var children_math_ids = to_comma_delimited_str(
 					children_accessor(node_data).map(function(child) {
 						return child.math_id;
 					})
 				);
-				promises.push(fetch_data(children_math_ids, depth - 1, node_data.math_id));
+				promises.push(
+					fetch_data(children_math_ids, depth - 1, node_data.math_id)
+				);
 			}
 		}
-		return Promise.all(promises)
+		return Promise.all(promises);
 	});
 }
-fetch_data(GAUSS_ID, 3, null).then(function() {
-	draw_tree(return_data);
-})
-
+fetch_data(GAUSS_ID, 4, null)
+	.then(function() {
+		//uniquify to prevent error in d3.stratify
+		draw_tree(uniquify(return_data, 'math_id'));
+	})
+	.catch(function(error) {
+		console.log(error);
+		throw error;
+	});
 
 $(document).ready(function() {
 	console.log("ready!");

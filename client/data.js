@@ -1,6 +1,19 @@
 /*
   Use (abuse?) closures to create modules
   http://www.adequatelygood.com/JavaScript-Module-Pattern-In-Depth.html
+
+  Example of a JSON returned by .fetch_data:
+
+  {
+    "_id": "5896853e5309753bb525b654",
+    "dissertation": "Über Multiplikatorgleichungen höherer Stufe im Gebiete der elliptischen Funktionen",
+    "name": "Paul Friedrich Biedermann",
+    "descendants": [],
+    "year_grad": 1887,
+    "school": "Universität Leipzig",
+    "math_id": 745,
+    "parent_id": 7401
+  }
 */
 
 var DATA_MODULE = (function() {

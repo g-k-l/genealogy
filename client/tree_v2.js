@@ -204,6 +204,3 @@ fetch_data(GAUSS_ID, 4, null)
 		throw error;
 	});
 
-$(document).ready(function() {
-	console.log("ready!");
-});

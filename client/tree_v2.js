@@ -1,14 +1,9 @@
-/*
-
-
-*/
 
 var date = new Date();
 const current_year = date.getFullYear();
 
 const GAUSS_ID = 18231,
 	GAUSS_GRAD_DATE = 1799,
-	REQUEST_ROOT = "/tree/",
 	SVG_CANVAS_WIDTH = 1280,
 	SVG_CANVAS_HEIGHT = 1280,
 	TREE_MARGIN_FRACTION = 0.8,
@@ -40,21 +35,7 @@ var tree = d3
 	.tree()
 	.size([2 * Math.PI, (SVG_CANVAS_WIDTH * TREE_MARGIN_FRACTION) / 2]);
 
-function children_accessor(d) {
-	/* 
-		need to flatten the array because it looks like:
-		[[<math_id>, <name>], ...]
-	*/
-	if (d.descendants === undefined) {
-		return null;
-	}
-	return d.descendants.map(function(inner_arr) {
-		return {
-			math_id: inner_arr[0],
-			name: inner_arr[1]
-		};
-	});
-}
+
 
 function projection(theta, r) {
 	/* converts polar coordinates to cartesian */
@@ -85,11 +66,7 @@ function rotate_text(d) {
 	}
 }
 
-function to_comma_delimited_str(arr) {
-	return arr.reduce(function(a, b) {
-		return a.toString() + "," + b.toString();
-	});
-}
+
 
 function uniquify(arr, key) {
 	var i;
@@ -160,44 +137,11 @@ function draw_tree(data) {
 		});
 }
 
-var return_data = [];
-function fetch_data(math_ids, depth, parent_id) {
-	/*
-		math_ids is a comma-delimited string e.g.
-			"1,2,3,4,5". This will fetch data with math_ids
-			1, 2, 3, 4, and 5.
-	*/
-	if (depth === undefined) {
-		depth = 1;
-	}
-	if (depth < 0) {
-		return;
-	}
-	return d3.json(REQUEST_ROOT + math_ids).then(function(data) {
-		return_data = return_data.concat(data);
-		var i;
-		var promises = [];
-		for (i = 0; i < data.length; i++) {
-			var node_data = data[i];
-			node_data.parent_id = parent_id;
-			if (node_data.descendants.length > 0) {
-				var children_math_ids = to_comma_delimited_str(
-					children_accessor(node_data).map(function(child) {
-						return child.math_id;
-					})
-				);
-				promises.push(
-					fetch_data(children_math_ids, depth - 1, node_data.math_id)
-				);
-			}
-		}
-		return Promise.all(promises);
-	});
-}
-fetch_data(GAUSS_ID, 4, null)
+
+DATA_MODULE.fetch_data(GAUSS_ID, 4)
 	.then(function() {
 		//uniquify to prevent error in d3.stratify
-		draw_tree(uniquify(return_data, 'math_id'));
+		draw_tree(uniquify(DATA_MODULE.return_data, 'math_id'));
 	})
 	.catch(function(error) {
 		console.log(error);

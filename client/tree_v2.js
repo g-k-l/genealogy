@@ -36,7 +36,6 @@ var tree = d3
 	.size([2 * Math.PI, (SVG_CANVAS_WIDTH * TREE_MARGIN_FRACTION) / 2]);
 
 
-
 function projection(theta, r) {
 	/* converts polar coordinates to cartesian */
 	return [r * Math.cos((theta -= Math.PI / 2)), r * Math.sin(theta)];
@@ -64,17 +63,6 @@ function rotate_text(d) {
 	} else {
 		return "rotate(" + ((d.x + Math.PI / 2) * 180) / Math.PI + ")";
 	}
-}
-
-
-
-function uniquify(arr, key) {
-	var i;
-	var hashmap = {}
-	for(i=0; i<arr.length;i++ ) {
-		hashmap[arr[i][key]] = arr[i]
-	}
-	return Object.values(hashmap)
 }
 
 function draw_tree(data) {
@@ -141,7 +129,7 @@ function draw_tree(data) {
 DATA_MODULE.fetch_data(GAUSS_ID, 4)
 	.then(function() {
 		//uniquify to prevent error in d3.stratify
-		draw_tree(uniquify(DATA_MODULE.return_data, 'math_id'));
+		draw_tree(DATA_MODULE.getFetchedData());
 	})
 	.catch(function(error) {
 		console.log(error);

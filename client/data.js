@@ -61,7 +61,7 @@ var DATA_MODULE = (function() {
     */
     this.return_data = [];
     MODULE = this; //need this reference in the d3.json callback
-    function _fetch_data(math_ids, depth, parent_id) {
+    function _fetch_data(math_ids, depth, parent_id, node_depth) {
       if (depth === undefined) {
         depth = 1;
       }
@@ -75,6 +75,7 @@ var DATA_MODULE = (function() {
         for (i = 0; i < data.length; i++) {
           var node_data = data[i];
           node_data.parent_id = parent_id;
+          node_data.depth = node_depth;
           if (node_data.descendants.length > 0) {
             var children_math_ids = to_comma_delimited_str(
               children_accessor(node_data).map(function(child) {
@@ -82,14 +83,14 @@ var DATA_MODULE = (function() {
               })
             );
             promises.push(
-              _fetch_data(children_math_ids, depth - 1, node_data.math_id)
+              _fetch_data(children_math_ids, depth - 1, node_data.math_id, node_depth+1)
             );
           }
         }
         return Promise.all(promises);
       });
     }
-    return _fetch_data(math_ids, depth, null);
+    return _fetch_data(math_ids, depth, null, 0);
   }
 
   function getFetchedData(){

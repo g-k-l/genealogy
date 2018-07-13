@@ -42,6 +42,9 @@ function projection(theta, r) {
 }
 
 function adjust_radius_by_year(d) {
+	if (d.parent === null) {
+		return d
+	}
 	let scale_factor;
 	if (d.data.year_grad === undefined) {
 		scale_factor = (d.parent.y + 1) / RADIAL_SCALING;
@@ -65,6 +68,26 @@ function rotate_text(d) {
 	}
 }
 
+function startLocationX(d) {
+	console.log(d.x)
+	return d.parent ? d.parent.x: d.x
+}
+
+function startLocationY(d) {
+	return d.parent ? d.parent.y: d.y
+}
+
+function by_n_children(a, b) {
+	if (a.children === undefined ) {
+		return -1
+	}
+	if (b.children === undefined ) {
+		return 1
+	}
+	return b.children.length - a.children.length
+}
+
+
 function draw_tree(data) {
 	var stratifed = d3
 		.stratify()
@@ -72,29 +95,22 @@ function draw_tree(data) {
 			return d.math_id;
 		})
 		.parentId(function(d) {
-			console.log(d)
 			return d.parent_id;
 		})(data);
 
 	root = d3.hierarchy(stratifed);
+	// root.sort(by_n_children)
 	tree(root);
 
-	var link = tree_group
+	var links = tree_group
 		.selectAll(".link")
 		.data(root.links())
 		.enter()
 		.append("path")
 		.attr("class", "link")
-		.attr(
-			"d",
-			d3.linkRadial()
-				.angle(function(d) {
-					return d.x;
-				})
-				.radius(function(d) {
-					return d.y;
-				})
-		);
+
+	TRANSITIONS.transitionLinks(links)
+		
 
 	var node = tree_group
 		.selectAll(".node")
@@ -105,6 +121,8 @@ function draw_tree(data) {
 		.attr("transform", transform);
 
 	node.append("circle").attr("r", CIRCLE_SIZE);
+
+	// TRANSITIONS.transitionLinks(node)
 
 	node.append("text")
 		.attr("dy", "0.31em")

@@ -15,6 +15,10 @@ app.route("/").get(function(req, res) {
 	res.sendFile(__dirname + "/client/tree.html");
 });
 
+app.route("/v2").get(function(req, res) {
+	res.sendFile(__dirname + "/client/v2/tree.html");
+})
+
 app.route("/tree/:math_ids").get(function(req, res) {
 	try {
 		var id_array = req.params.math_ids.split(",").map(Number);

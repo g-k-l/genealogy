@@ -53,36 +53,12 @@ function adjust_radius_by_year(d) {
 	return d;
 }
 
-function transform(d) {
-	// d = adjust_radius_by_year(d)
-	return "translate(" + projection(d.x, d.y) + ")";
-}
-
 function rotate_text(d) {
 	if (d.x < Math.PI) {
 		return "rotate(" + ((d.x - Math.PI / 2) * 180) / Math.PI + ")";
 	} else {
 		return "rotate(" + ((d.x + Math.PI / 2) * 180) / Math.PI + ")";
 	}
-}
-
-function startLocationX(d) {
-	console.log(d.x);
-	return d.parent ? d.parent.x : d.x;
-}
-
-function startLocationY(d) {
-	return d.parent ? d.parent.y : d.y;
-}
-
-function by_n_children(a, b) {
-	if (a.children === undefined) {
-		return -1;
-	}
-	if (b.children === undefined) {
-		return 1;
-	}
-	return b.children.length - a.children.length;
 }
 
 function draw_tree(data) {
@@ -96,7 +72,6 @@ function draw_tree(data) {
 		})(data);
 
 	root = d3.hierarchy(stratifed);
-	// root.sort(by_n_children)
 	tree(root);
 
 	var links = tree_group

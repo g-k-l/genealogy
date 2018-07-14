@@ -12,8 +12,12 @@ app.use(express.static(__dirname));
 app.use(express.static(__dirname + "/client"));
 
 app.route("/").get(function(req, res) {
-	res.sendFile(__dirname + "/client/tree.html");
+	res.redirect("/v2")
 });
+
+app.route("/v1").get(function(req, res) {
+	res.sendFile(__dirname + "/client/v1/tree.html");
+})
 
 app.route("/v2").get(function(req, res) {
 	res.sendFile(__dirname + "/client/v2/tree.html");

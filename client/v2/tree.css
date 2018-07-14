@@ -1,0 +1,69 @@
+.jumbotron {
+  background-color: transparent;
+  margin-bottom: 0;
+  padding: 0;
+}
+
+.node {
+  cursor: pointer;
+}
+
+.node circle {
+  fill: #fff;
+  stroke: steelblue;
+  stroke-width: 1.5px;
+}
+
+text.name {
+  font-size: 12px;
+}
+
+text.school {
+  font-size: 10px;
+}
+
+.link {
+  fill: none;
+  stroke: #ccc;
+  stroke-width: 1.5px;
+}
+
+.search-nodes circle {
+  fill: #fff;
+  stroke: steelblue;
+  stroke-width: 1.5px;
+}
+
+.search-nodes text {
+  font: 12px sans-serif;
+}
+
+rect.btn {
+  stroke:#fff;
+  fill:#fff;
+  fill-opacity:0;
+  stroke-opacity:0;
+}
+
+.year-ticks {
+  font: 14px sans-serif;
+}
+
+.d3-tip {
+  font: 12px sans-serif;
+  line-height: 1;
+  padding: 12px;
+  background: grey;
+  color: #fff;
+  border-radius: 2px;
+}
+
+.svg-canvas {
+  display: block;
+  margin: auto;
+}
+
+#genealogy {
+  margin: 0, auto;
+  justify-content: center;
+}

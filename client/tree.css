@@ -1,9 +1,6 @@
 .jumbotron {
   background-color: transparent;
-  padding:0 !important;
-  margin-top: 23px;
-  text-align:center;
-  margin-bottom: 20px;
+  padding: 0;
 }
 
 .node {
@@ -60,7 +57,12 @@ rect.btn {
   border-radius: 2px;
 }
 
-#the-tree {
-  margin: 0px 50px 0px 50px;
-  overflow: scroll;
+.svg-canvas {
+  display: block;
+  margin: auto;
+}
+
+#genealogy {
+  margin: 0, auto;
+  justify-content: center;
 }

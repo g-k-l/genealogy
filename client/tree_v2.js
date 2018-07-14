@@ -3,15 +3,16 @@ const current_year = date.getFullYear();
 
 const GAUSS_ID = 18231,
 	GAUSS_GRAD_DATE = 1799,
-	SVG_CANVAS_WIDTH = 1280,
-	SVG_CANVAS_HEIGHT = 1280,
-	TREE_MARGIN_FRACTION = 0.8,
+	SVG_CANVAS_WIDTH = Math.min(window.innerWidth*0.75, window.innerHeight*0.75),
+	SVG_CANVAS_HEIGHT = Math.min(window.innerWidth*0.8, window.innerHeight*0.8),
+	TREE_MARGIN_FRACTION = 0.95,
 	CIRCLE_SIZE = 10,
 	RADIAL_SCALING = current_year - GAUSS_GRAD_DATE;
 
 var svg_canvas = d3
 	.select("#genealogy")
 	.append("svg")
+	.attr("class", "svg-canvas")
 	.attr("width", SVG_CANVAS_WIDTH)
 	.attr("height", SVG_CANVAS_HEIGHT);
 
@@ -116,7 +117,7 @@ function draw_tree(data) {
 	TRANSITIONS.nameFadeIn(names);
 }
 
-DATA_MODULE.fetch_data(GAUSS_ID, 3)
+DATA_MODULE.fetch_data(GAUSS_ID, 4)
 	.then(function() {
 		//uniquify to prevent error in d3.stratify
 		draw_tree(DATA_MODULE.getFetchedData());

@@ -124,7 +124,6 @@ function draw_tree(data) {
     .append("text")
     .attr("class", "name")
     .text(function last_name(d) {
-      console.log(d.data.data)
       var name_parts = d.data.data.name.split(" ");
       return name_parts[name_parts.length - 1];
     })

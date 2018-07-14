@@ -1,4 +1,3 @@
-
 var date = new Date();
 const current_year = date.getFullYear();
 
@@ -35,7 +34,6 @@ var tree = d3
 	.tree()
 	.size([2 * Math.PI, (SVG_CANVAS_WIDTH * TREE_MARGIN_FRACTION) / 2]);
 
-
 function projection(theta, r) {
 	/* converts polar coordinates to cartesian */
 	return [r * Math.cos((theta -= Math.PI / 2)), r * Math.sin(theta)];
@@ -43,7 +41,7 @@ function projection(theta, r) {
 
 function adjust_radius_by_year(d) {
 	if (d.parent === null) {
-		return d
+		return d;
 	}
 	let scale_factor;
 	if (d.data.year_grad === undefined) {
@@ -69,24 +67,23 @@ function rotate_text(d) {
 }
 
 function startLocationX(d) {
-	console.log(d.x)
-	return d.parent ? d.parent.x: d.x
+	console.log(d.x);
+	return d.parent ? d.parent.x : d.x;
 }
 
 function startLocationY(d) {
-	return d.parent ? d.parent.y: d.y
+	return d.parent ? d.parent.y : d.y;
 }
 
 function by_n_children(a, b) {
-	if (a.children === undefined ) {
-		return -1
+	if (a.children === undefined) {
+		return -1;
 	}
-	if (b.children === undefined ) {
-		return 1
+	if (b.children === undefined) {
+		return 1;
 	}
-	return b.children.length - a.children.length
+	return b.children.length - a.children.length;
 }
-
 
 function draw_tree(data) {
 	var stratifed = d3
@@ -107,24 +104,29 @@ function draw_tree(data) {
 		.data(root.links())
 		.enter()
 		.append("path")
-		.attr("class", "link")
+		.attr("class", "link");
 
-	TRANSITIONS.transitionLinks(links)
-		
+	TRANSITIONS.transitionLinks(links);
 
 	var node = tree_group
 		.selectAll(".node")
 		.data(root.descendants())
 		.enter()
 		.append("g")
-		.attr("class", "node")
-		.attr("transform", transform);
+		.attr("class", "node");
 
-	node.append("circle").attr("r", CIRCLE_SIZE);
+	var circles = node.append("circle");
 
-	// TRANSITIONS.transitionLinks(node)
+	TRANSITIONS.transitionNodes(node);
+	TRANSITIONS.circleFadeIn(circles);
 
-	node.append("text")
+	var names = node
+		.append("text")
+		.attr("class", "name")
+		.text(function last_name(d) {
+			var name_parts = d.data.data.name.split(" ");
+			return name_parts[name_parts.length - 1];
+		})
 		.attr("dy", "0.31em")
 		.attr("x", function(d) {
 			return d.x < Math.PI === !d.children
@@ -134,17 +136,12 @@ function draw_tree(data) {
 		.attr("text-anchor", function(d) {
 			return d.x < Math.PI === !d.children ? "start" : "end";
 		})
-		.attr("class", "name")
-		.attr("transform", rotate_text)
-		.text(function(d) {
-			// last name only
-			var name_parts = d.data.data.name.split(" ");
-			return name_parts[name_parts.length - 1];
-		});
+		.attr("transform", rotate_text);
+
+	TRANSITIONS.nameFadeIn(names);
 }
 
-
-DATA_MODULE.fetch_data(GAUSS_ID, 4)
+DATA_MODULE.fetch_data(GAUSS_ID, 3)
 	.then(function() {
 		//uniquify to prevent error in d3.stratify
 		draw_tree(DATA_MODULE.getFetchedData());
@@ -153,4 +150,3 @@ DATA_MODULE.fetch_data(GAUSS_ID, 4)
 		console.log(error);
 		throw error;
 	});
-

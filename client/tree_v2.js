@@ -3,9 +3,9 @@ const current_year = date.getFullYear();
 
 const GAUSS_ID = 18231,
 	GAUSS_GRAD_DATE = 1799,
-	SVG_CANVAS_WIDTH = Math.min(window.innerWidth*0.75, window.innerHeight*0.75),
-	SVG_CANVAS_HEIGHT = Math.min(window.innerWidth*0.8, window.innerHeight*0.8),
-	TREE_MARGIN_FRACTION = 0.95,
+	SVG_CANVAS_WIDTH = Math.min(window.innerWidth*0.9, window.innerHeight*0.9),
+	SVG_CANVAS_HEIGHT = Math.min(window.innerWidth*0.9, window.innerHeight*0.9),
+	TREE_MARGIN_FRACTION = 0.8,
 	CIRCLE_SIZE = 10,
 	RADIAL_SCALING = current_year - GAUSS_GRAD_DATE;
 
@@ -21,19 +21,6 @@ function center_root() {
 		"translate(" + SVG_CANVAS_WIDTH / 2 + "," + SVG_CANVAS_HEIGHT / 2 + ")"
 	);
 }
-
-var tree_group = svg_canvas
-	.append("g")
-	.attr("transform", center_root())
-	.attr("id", "tree-group");
-
-/* 
-	Assume coordinates are Polar, then convert
-	back to cartesian representation.
-*/
-var tree = d3
-	.tree()
-	.size([2 * Math.PI, (SVG_CANVAS_WIDTH * TREE_MARGIN_FRACTION) / 2]);
 
 function projection(theta, r) {
 	/* converts polar coordinates to cartesian */
@@ -63,6 +50,19 @@ function rotate_text(d) {
 }
 
 function draw_tree(data) {
+	var tree_group = svg_canvas
+	.append("g")
+	.attr("transform", center_root())
+	.attr("id", "tree-group");
+
+	/* 
+		Assume coordinates are Polar, then convert
+		back to cartesian representation.
+	*/
+	var tree = d3
+		.tree()
+		.size([2 * Math.PI, (SVG_CANVAS_WIDTH * TREE_MARGIN_FRACTION) / 2]);
+
 	var stratifed = d3
 		.stratify()
 		.id(function(d) {

@@ -15,7 +15,7 @@
 }
 
 text.name {
-  font-size: 12px;
+  font: 12px Helvetica Neue;
 }
 
 text.school {
@@ -38,11 +38,22 @@ text.school {
   font: 12px sans-serif;
 }
 
-rect.btn {
-  stroke:#fff;
+rect {
+  stroke:#ccc;
   fill:#fff;
-  fill-opacity:0;
-  stroke-opacity:0;
+  stroke-width: 2px;
+  fill-opacity: 0;
+  /*visibility: hidden;*/
+}
+
+.legend-title {
+  font: 20px "Helvetica Neue";
+  font-weight: 700;
+}
+
+.legend-detail {
+  font: 16px "Helvetica Neue";
+  font-weight: 200;
 }
 
 .year-ticks {

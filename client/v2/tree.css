@@ -38,14 +38,6 @@ text.school {
   font: 12px sans-serif;
 }
 
-rect {
-  stroke:#ccc;
-  fill:#fff;
-  stroke-width: 2px;
-  fill-opacity: 0;
-  /*visibility: hidden;*/
-}
-
 .legend-title {
   font: 20px "Helvetica Neue";
   font-weight: 700;

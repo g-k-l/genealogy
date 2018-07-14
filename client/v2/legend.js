@@ -10,7 +10,8 @@ var LEGEND = (function() {
     LEGEND_HEIGHT,
     TOP_MARGIN,
     LEFT_MARGIN,
-    INLINE_MARGIN;
+    INLINE_MARGIN,
+    MAX_CHARS_PER_LINE;
 
   function init(svg_canvas, canvas_width, canvas_height) {
     this.LEGEND_WIDTH = canvas_width / 5;
@@ -18,6 +19,7 @@ var LEGEND = (function() {
     this.TOP_MARGIN = this.LEGEND_HEIGHT / 10;
     this.LEFT_MARGIN = this.LEGEND_WIDTH / 8;
     this.INLINE_MARGIN = this.LEGEND_HEIGHT / 9;
+    this.MAX_CHARS_PER_LINE = 40;
 
     this.legend = svg_canvas
       .append("g")
@@ -28,8 +30,8 @@ var LEGEND = (function() {
   }
 
   function bind(data) {
-    this.bind_title(data.title);
-    this.bind_details(data.details);
+    this.bind_title(data[0]);
+    this.bind_details(data.slice(1));
   }
 
   function bind_title(title) {
@@ -50,8 +52,11 @@ var LEGEND = (function() {
         .attr("x", this.LEFT_MARGIN)
         .attr("y", (i+2) * this.INLINE_MARGIN)
         .text(details[i]);
-      console.log(i)
     }
+  }
+
+  function unbind() {
+    this.legend.selectAll("*").remove()
   }
 
   module_export.legend = legend;
@@ -59,6 +64,7 @@ var LEGEND = (function() {
   module_export.bind = bind;
   module_export.bind_title = bind_title;
   module_export.bind_details = bind_details;
+  module_export.unbind = unbind;
 
   return module_export;
 })();

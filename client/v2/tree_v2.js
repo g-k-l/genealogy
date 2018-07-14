@@ -24,6 +24,22 @@ var svg_canvas = d3
 
 LEGEND.init(svg_canvas, SVG_CANVAS_WIDTH, SVG_CANVAS_HEIGHT);
 
+function json_to_array(data) {
+  /* Map each piece of data to array form for the legend*/
+  let dissertation;
+  if (data.dissertation.length > LEGEND.MAX_CHARS_PER_LINE)
+    dissertation = data.dissertation.slice(0,LEGEND.MAX_CHARS_PER_LINE) + "..."
+  else
+    dissertation = data.dissertation
+  return [
+    data.name,
+    data.school + " (" + data.year_grad + ")",
+    "Dissertation: " + dissertation,
+    "Direct Descendants: " + data.descendants.length,
+    "Advisor ID: " + data.parent_id
+  ]
+}
+
 function center_root() {
   return (
     "translate(" + SVG_CANVAS_WIDTH / 2 + "," + SVG_CANVAS_HEIGHT / 2 + ")"
@@ -108,6 +124,7 @@ function draw_tree(data) {
     .append("text")
     .attr("class", "name")
     .text(function last_name(d) {
+      console.log(d.data.data)
       var name_parts = d.data.data.name.split(" ");
       return name_parts[name_parts.length - 1];
     })
@@ -122,27 +139,16 @@ function draw_tree(data) {
     })
     .attr("transform", rotate_text);
 
-  /* TODO set mouseover/mouseout behavior -
-    on mouseover, show data in the legend box */
+  node.on("mouseover", function(d) {
+    LEGEND.unbind()
+    LEGEND.bind(json_to_array(d.data.data))
+  })
 
   TRANSITIONS.nameFadeIn(names);
 }
 
 DATA_MODULE.fetch_data(GAUSS_ID, 4)
   .then(function() {
-    
-    var dummy_legend_data = [
-      "MATHEMATICIAN NAME",
-      "UNIVERSITY OF SOME PLACE",
-      "YEAR GRADUATED",
-      "NUMBER OF DESCENDANTS",
-      "ADVISOR/PARENT NAME",
-      "LINK TO NDSU"
-    ];
-
-    LEGEND.bind_title("C. Felix Klein");
-    LEGEND.bind_details(dummy_legend_data);
-
     draw_tree(DATA_MODULE.getFetchedData());
   })
   .catch(function(error) {

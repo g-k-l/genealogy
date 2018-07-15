@@ -52,7 +52,7 @@ var TRANSITIONS = (function() {
         return final_location(d);
       }
     };
-    selection
+    let transitions = selection
       .attr("transform", initial_location)
       .transition("nodes")
       .delay(function(d) {
@@ -60,7 +60,7 @@ var TRANSITIONS = (function() {
       })
       .duration(DURATION)
       .attr("transform", final_location);
-    return selection;
+    return transitions;
   }
 
   function circleFadeIn(selection) {

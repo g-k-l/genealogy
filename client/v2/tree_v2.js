@@ -28,16 +28,16 @@ function json_to_array(data) {
   /* Map each piece of data to array form for the legend*/
   let dissertation;
   if (data.dissertation.length > LEGEND.MAX_CHARS_PER_LINE)
-    dissertation = data.dissertation.slice(0,LEGEND.MAX_CHARS_PER_LINE) + "..."
-  else
-    dissertation = data.dissertation
+    dissertation =
+      data.dissertation.slice(0, LEGEND.MAX_CHARS_PER_LINE) + "...";
+  else dissertation = data.dissertation;
   return [
     data.name,
     data.school + " (" + data.year_grad + ")",
     "Dissertation: " + dissertation,
     "Direct Descendants: " + data.descendants.length,
     "Advisor ID: " + data.parent_id
-  ]
+  ];
 }
 
 function center_root() {
@@ -71,6 +71,36 @@ function rotate_text(d) {
   } else {
     return "rotate(" + ((d.x + Math.PI / 2) * 180) / Math.PI + ")";
   }
+}
+
+function highlightCircleChain(d, color, radius) {
+  d3.select(this)
+    .select("circle")
+    .style("stroke", color)
+    .attr("r", radius);
+
+  let current = d;
+  while (true) {
+    d3.selectAll(".node")
+      .filter(function(p) {
+        return current.parent === p;
+      })
+      .select("circle")
+      .style("stroke", color)
+      .attr("r", radius);
+    if (current.parent === null) {
+      break;
+    }
+    current = current.parent;
+  }
+}
+
+function circleMouseOver(d) {
+  highlightCircleChain.call(this, d, "orange", 12);
+}
+
+function circleMouseOut(d) {
+  highlightCircleChain.call(this, d, "steelblue", 10);
 }
 
 function draw_tree(data) {
@@ -117,7 +147,17 @@ function draw_tree(data) {
 
   var circles = node.append("circle");
 
-  TRANSITIONS.transitionNodes(node);
+  TRANSITIONS.transitionNodes(node).each(function() {
+    // bind mouse behavior after transitions are complete
+    // otherwise mouseover/mouseout will interrupt transition
+    d3.select(this).on("mouseover", function(d) {
+      LEGEND.unbind();
+      LEGEND.bind(json_to_array(d.data.data));
+      circleMouseOver.call(this, d);
+    });
+    d3.select(this).on("mouseout", circleMouseOut);
+  });
+
   TRANSITIONS.circleFadeIn(circles);
 
   var names = node
@@ -137,11 +177,6 @@ function draw_tree(data) {
       return d.x < Math.PI === !d.children ? "start" : "end";
     })
     .attr("transform", rotate_text);
-
-  node.on("mouseover", function(d) {
-    LEGEND.unbind()
-    LEGEND.bind(json_to_array(d.data.data))
-  })
 
   TRANSITIONS.nameFadeIn(names);
 }

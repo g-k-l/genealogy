@@ -73,36 +73,6 @@ function rotate_text(d) {
   }
 }
 
-function highlightCircleChain(d, color, radius) {
-  d3.select(this)
-    .select("circle")
-    .style("stroke", color)
-    .attr("r", radius);
-
-  let current = d;
-  while (true) {
-    d3.selectAll(".node")
-      .filter(function(p) {
-        return current.parent === p;
-      })
-      .select("circle")
-      .style("stroke", color)
-      .attr("r", radius);
-    if (current.parent === null) {
-      break;
-    }
-    current = current.parent;
-  }
-}
-
-function circleMouseOver(d) {
-  highlightCircleChain.call(this, d, "orange", 12);
-}
-
-function circleMouseOut(d) {
-  highlightCircleChain.call(this, d, "steelblue", 10);
-}
-
 function draw_tree(data) {
   var tree_group = svg_canvas
     .append("g")
@@ -153,9 +123,11 @@ function draw_tree(data) {
     d3.select(this).on("mouseover", function(d) {
       LEGEND.unbind();
       LEGEND.bind(json_to_array(d.data.data));
-      circleMouseOver.call(this, d);
+      INTERACTIVE.nodeMouseOver(this, d);
     });
-    d3.select(this).on("mouseout", circleMouseOut);
+    d3.select(this).on("mouseout", function(d) {
+      INTERACTIVE.nodeMouseOut(this, d);
+    });
   });
 
   TRANSITIONS.circleFadeIn(circles);

@@ -24,7 +24,7 @@ var TRANSITIONS = (function() {
       });
 
     /* assign transition to the selected links */
-    selection
+    let transitions = selection
       .attr("d", function(d) {
         return link_generator({
           source: d.source,
@@ -37,7 +37,7 @@ var TRANSITIONS = (function() {
       })
       .duration(DURATION)
       .attr("d", link_generator);
-    return selection;
+    return transitions;
   }
 
   function transitionNodes(selection) {
@@ -64,7 +64,7 @@ var TRANSITIONS = (function() {
   }
 
   function circleFadeIn(selection) {
-    selection
+    let transitions = selection
       .attr("r", 0)
       .transition("circle-fade-in")
       .delay(function(d) {
@@ -72,11 +72,11 @@ var TRANSITIONS = (function() {
       })
       .duration(DURATION)
       .attr("r", CIRCLE_SIZE);
-    return selection;
+    return transitions;
   }
 
   function nameFadeIn(selection) {
-    selection
+    let transitions= selection
       .style("opacity", 0)
       .transition("name-fade-in")
       .delay(function(d) {
@@ -84,7 +84,7 @@ var TRANSITIONS = (function() {
       })
       .duration(DURATION)
       .style("opacity", 1);
-    return selection;
+    return transitions;
   }
 
   function transitionNames(selection) {}

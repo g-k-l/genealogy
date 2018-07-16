@@ -106,7 +106,7 @@ function draw_tree(data) {
     .append("path")
     .attr("class", "link");
 
-  TRANSITIONS.transitionLinks(links);
+  TRANSITIONS.transitionLinksEnter(links);
 
   var node = tree_group
     .selectAll(".node")
@@ -117,7 +117,7 @@ function draw_tree(data) {
 
   var circles = node.append("circle");
 
-  TRANSITIONS.transitionNodes(node).on("end", function() {
+  TRANSITIONS.transitionNodesEnter(node).on("end", function() {
     // bind mouse behavior after transitions are complete
     // otherwise mouseover/mouseout will interrupt transition
     d3.select(this).on("mouseover", function(d) {

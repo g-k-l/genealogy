@@ -66,7 +66,6 @@ function rotate_text(d) {
   }
 }
 
-
 function update_tree(data) {
   var tree = d3
     .tree()
@@ -90,6 +89,8 @@ function update_tree(data) {
     .enter()
     .append("path")
     .attr("class", "link");
+  TRANSITIONS.transitionLinksExit(links.exit()).remove();
+
 
   var node = tree_group
     .selectAll(".node")
@@ -97,8 +98,10 @@ function update_tree(data) {
     .enter()
     .append("g")
     .attr("class", "node");
+  TRANSITIONS.transitionNodesExit(node.exit()).remove();
 
   var circles = node.append("circle");
+
   var names = node
     .append("text")
     .attr("class", "name")
@@ -116,7 +119,6 @@ function update_tree(data) {
       return d.x < Math.PI === !d.children ? "start" : "end";
     })
     .attr("transform", rotate_text);
-
   return {
     node: node,
     links: links,
@@ -125,20 +127,14 @@ function update_tree(data) {
   }
 }
 
-
-function draw_tree(data) {
-  /*
+function initialTransitions(data) {
+   /*
     This function is run when the page first
     loads - with the opening transitions.
   */
-  res = update_tree(data);
-  initialTransitions(res.node, res.links, res.circles, res.names);
-}
-
-
-function initialTransitions(node, links, circles, names) {
-  TRANSITIONS.transitionLinksEnter(links);
-  TRANSITIONS.transitionNodesEnter(node).on("end", function() {
+  ret = update_tree(data);
+  TRANSITIONS.transitionLinksEnter(ret.links);
+  TRANSITIONS.transitionNodesEnter(ret.node).on("end", function() {
     // bind mouse behavior after transitions are complete
     // otherwise mouseover/mouseout will interrupt transition
     d3.select(this).on("mouseover", function(d) {
@@ -150,14 +146,15 @@ function initialTransitions(node, links, circles, names) {
       INTERACTIVE.nodeMouseOut(this, d);
     });
   });
-  TRANSITIONS.circleFadeIn(circles);
-  TRANSITIONS.nameFadeIn(names);
+  TRANSITIONS.circleFadeIn(ret.circles);
+  TRANSITIONS.nameFadeIn(ret.names);
 }
 
 
+// Entry point is right here
 DATA_MODULE.fetch_data(GAUSS_ID, 4)
   .then(function() {
-    draw_tree(DATA_MODULE.getFetchedData());
+    initialTransitions(DATA_MODULE.getFetchedData());
   })
   .catch(function(error) {
     console.log(error);

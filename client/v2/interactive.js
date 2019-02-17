@@ -40,6 +40,13 @@ var INTERACTIVE = (function() {
     highlightCircleChain.call(node, d, "steelblue", 10);
   }
 
+  function nodeOnClick(d) {
+    
+  }
+
+
+
+
   module_export.highlightCircleChain = highlightCircleChain;
   module_export.nodeMouseOut = nodeMouseOut;
   module_export.nodeMouseOver = nodeMouseOver;

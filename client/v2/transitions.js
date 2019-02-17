@@ -6,8 +6,8 @@
 var TRANSITIONS = (function() {
   var module_export = {};
 
-  const DELAY = 750,
-    DELAY_MULT = 25,
+  const DELAY = 600,
+    DELAY_MULT = 5,
     DURATION = 1500,
     CIRCLE_SIZE = 10;
 
@@ -116,7 +116,7 @@ var TRANSITIONS = (function() {
   function circleFadeOut(selection) {}
 
   function nameFadeIn(selection) {
-    let transitions = selection
+    return selection
       .style("opacity", 0)
       .transition("name-fade-in")
       .delay(function(d, i) {
@@ -124,7 +124,6 @@ var TRANSITIONS = (function() {
       })
       .duration(DURATION)
       .style("opacity", 1);
-    return transitions;
   }
 
   function nameFadeOut(selection) {}

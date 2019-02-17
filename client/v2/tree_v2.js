@@ -94,8 +94,6 @@ function update_tree(data) {
     .append("path")
     .attr("class", "link");
     
-  links.exit().remove();
-
   var node = tree_group
     .selectAll(".node")
     .data(root.descendants())
@@ -156,7 +154,7 @@ function initialTransitions(data) {
         DATA_MODULE.onClickFetchData(d).then(function() {
           initialTransitions(DATA_MODULE.getFetchedData());
         });
-      } else {
+      } else if (d.children.length > 0) {
         // TODO, retract/hide tree
       }
     });

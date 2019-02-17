@@ -99,10 +99,15 @@ var DATA_MODULE = (function() {
     return uniquify(this.return_data, "math_id")
   }
 
+  function onClickFetchData(d) {
+    return fetch_data(d.data.data.math_id, 0);
+  }
+
   /* EXPORTS */
   module_export.REQUEST_ROOT = REQUEST_ROOT;
   module_export.fetch_data = fetch_data;
   module_export.children_accessor = children_accessor;
   module_export.getFetchedData = getFetchedData;
+  module_export.onClickFetchData = onClickFetchData;
   return module_export;
 })();

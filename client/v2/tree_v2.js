@@ -24,13 +24,20 @@ var svg_canvas = d3
 
 LEGEND.init(svg_canvas, SVG_CANVAS_WIDTH, SVG_CANVAS_HEIGHT);
 
+var tree_group = svg_canvas
+  .append("g")
+  .attr("transform", center_root())
+  .attr("id", "tree-group");
+
+
 function json_to_array(data) {
   /* Map each piece of data to array form for the legend*/
-  let dissertation;
-  if (data.dissertation.length > LEGEND.MAX_CHARS_PER_LINE)
-    dissertation =
-      data.dissertation.slice(0, LEGEND.MAX_CHARS_PER_LINE) + "...";
-  else dissertation = data.dissertation;
+  var dissertation;
+  if (data.dissertation.length > LEGEND.MAX_CHARS_PER_LINE) {
+    dissertation = data.dissertation.slice(0, LEGEND.MAX_CHARS_PER_LINE) + "...";
+  } else {
+    dissertation = data.dissertation;
+  }
   return [
     data.name,
     data.school + " (" + data.year_grad + ")",
@@ -73,16 +80,8 @@ function rotate_text(d) {
   }
 }
 
-function draw_tree(data) {
-  var tree_group = svg_canvas
-    .append("g")
-    .attr("transform", center_root())
-    .attr("id", "tree-group");
 
-  /* 
-    Assume coordinates are Polar, then convert
-    back to cartesian representation.
-  */
+function update_tree(data) {
   var tree = d3
     .tree()
     .size([2 * Math.PI, (SVG_CANVAS_WIDTH * TREE_MARGIN_FRACTION) / 2]);
@@ -106,8 +105,6 @@ function draw_tree(data) {
     .append("path")
     .attr("class", "link");
 
-  TRANSITIONS.transitionLinksEnter(links);
-
   var node = tree_group
     .selectAll(".node")
     .data(root.descendants())
@@ -116,22 +113,6 @@ function draw_tree(data) {
     .attr("class", "node");
 
   var circles = node.append("circle");
-
-  TRANSITIONS.transitionNodesEnter(node).on("end", function() {
-    // bind mouse behavior after transitions are complete
-    // otherwise mouseover/mouseout will interrupt transition
-    d3.select(this).on("mouseover", function(d) {
-      LEGEND.unbind();
-      LEGEND.bind(json_to_array(d.data.data));
-      INTERACTIVE.nodeMouseOver(this, d);
-    });
-    d3.select(this).on("mouseout", function(d) {
-      INTERACTIVE.nodeMouseOut(this, d);
-    });
-  });
-
-  TRANSITIONS.circleFadeIn(circles);
-
   var names = node
     .append("text")
     .attr("class", "name")
@@ -150,8 +131,43 @@ function draw_tree(data) {
     })
     .attr("transform", rotate_text);
 
+  return {
+    node: node,
+    links: links,
+    circles: circles,
+    names: names
+  }
+}
+
+
+function draw_tree(data) {
+  /*
+    This function is run when the page first
+    loads - with the opening transitions.
+  */
+  res = update_tree(data);
+  initialTransitions(res.node, res.links, res.circles, res.names);
+}
+
+
+function initialTransitions(node, links, circles, names) {
+  TRANSITIONS.transitionLinksEnter(links);
+  TRANSITIONS.transitionNodesEnter(node).on("end", function() {
+    // bind mouse behavior after transitions are complete
+    // otherwise mouseover/mouseout will interrupt transition
+    d3.select(this).on("mouseover", function(d) {
+      LEGEND.unbind();
+      LEGEND.bind(json_to_array(d.data.data));
+      INTERACTIVE.nodeMouseOver(this, d);
+    });
+    d3.select(this).on("mouseout", function(d) {
+      INTERACTIVE.nodeMouseOut(this, d);
+    });
+  });
+  TRANSITIONS.circleFadeIn(circles);
   TRANSITIONS.nameFadeIn(names);
 }
+
 
 DATA_MODULE.fetch_data(GAUSS_ID, 4)
   .then(function() {

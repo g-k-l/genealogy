@@ -58,20 +58,6 @@ function projection(theta, r) {
   return [r * Math.cos((theta -= Math.PI / 2)), r * Math.sin(theta)];
 }
 
-function adjust_radius_by_year(d) {
-  if (d.parent === null) {
-    return d;
-  }
-  let scale_factor;
-  if (d.data.year_grad === undefined) {
-    scale_factor = (d.parent.y + 1) / RADIAL_SCALING;
-  } else {
-    scale_factor = (d.data.year_grad - GAUSS_GRAD_DATE) / RADIAL_SCALING;
-  }
-  d.y *= Math.sqrt(scale_factor);
-  return d;
-}
-
 function rotate_text(d) {
   if (d.x < Math.PI) {
     return "rotate(" + ((d.x - Math.PI / 2) * 180) / Math.PI + ")";

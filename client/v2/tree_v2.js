@@ -71,7 +71,7 @@ function update_tree(data) {
     .tree()
     .size([2 * Math.PI, (SVG_CANVAS_WIDTH * TREE_MARGIN_FRACTION) / 2]);
 
-  var stratifed = d3
+  var stratified = d3
     .stratify()
     .id(function(d) {
       return d.math_id;
@@ -80,7 +80,11 @@ function update_tree(data) {
       return d.parent_id;
     })(data);
 
-  root = d3.hierarchy(stratifed);
+
+  d3.selectAll(".link").remove()    
+  d3.selectAll(".node").remove()
+
+  var root = d3.hierarchy(stratified);
   tree(root);
 
   var links = tree_group
@@ -89,8 +93,8 @@ function update_tree(data) {
     .enter()
     .append("path")
     .attr("class", "link");
-  TRANSITIONS.transitionLinksExit(links.exit()).remove();
-
+    
+  links.exit().remove();
 
   var node = tree_group
     .selectAll(".node")
@@ -98,7 +102,6 @@ function update_tree(data) {
     .enter()
     .append("g")
     .attr("class", "node");
-  TRANSITIONS.transitionNodesExit(node.exit()).remove();
 
   var circles = node.append("circle");
 
@@ -137,13 +140,25 @@ function initialTransitions(data) {
   TRANSITIONS.transitionNodesEnter(ret.node).on("end", function() {
     // bind mouse behavior after transitions are complete
     // otherwise mouseover/mouseout will interrupt transition
-    d3.select(this).on("mouseover", function(d) {
+    var this_selection = d3.select(this);
+    this_selection.on("mouseover", function(d) {
       LEGEND.unbind();
       LEGEND.bind(json_to_array(d.data.data));
       INTERACTIVE.nodeMouseOver(this, d);
     });
-    d3.select(this).on("mouseout", function(d) {
+    this_selection.on("mouseout", function(d) {
       INTERACTIVE.nodeMouseOut(this, d);
+    });
+    this_selection.on("click", function(d, i, node) {
+      if (d.children === undefined & d.data.data.descendants.length === 0) {
+        return
+      } else if (d.children === undefined & d.data.data.descendants.length > 0) {
+        DATA_MODULE.onClickFetchData(d).then(function() {
+          initialTransitions(DATA_MODULE.getFetchedData());
+        });
+      } else {
+        // TODO, retract/hide tree
+      }
     });
   });
   TRANSITIONS.circleFadeIn(ret.circles);
@@ -152,7 +167,7 @@ function initialTransitions(data) {
 
 
 // Entry point is right here
-DATA_MODULE.fetch_data(GAUSS_ID, 4)
+DATA_MODULE.fetch_data(GAUSS_ID, 4, null)
   .then(function() {
     initialTransitions(DATA_MODULE.getFetchedData());
   })

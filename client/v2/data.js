@@ -52,15 +52,14 @@ var DATA_MODULE = (function() {
     return Object.values(hashmap);
   }
 
-  var return_data = [];
-  function fetch_data(math_ids, depth) {
+
+  function fetch_data(math_ids, depth, parent_id) {
     /*
       math_ids is a comma-delimited string e.g.
         "1,2,3,4,5". This will fetch data with math_ids
         1, 2, 3, 4, and 5.
     */
-    this.return_data = [];
-    MODULE = this; //need this reference in the d3.json callback
+    MODULE = this;
     function _fetch_data(math_ids, depth, parent_id, node_depth) {
       if (depth === undefined) {
         depth = 1;
@@ -90,7 +89,7 @@ var DATA_MODULE = (function() {
         return Promise.all(promises);
       });
     }
-    return _fetch_data(math_ids, depth, null, 0);
+    return _fetch_data(math_ids, depth, parent_id, 0);
   }
 
   function getFetchedData(){
@@ -100,14 +99,15 @@ var DATA_MODULE = (function() {
   }
 
   function onClickFetchData(d) {
-    return fetch_data(d.data.data.math_id, 0);
+    return this.fetch_data(d.data.id, 1, d.parent.data.id);
   }
 
   /* EXPORTS */
+  module_export.return_data = [];
   module_export.REQUEST_ROOT = REQUEST_ROOT;
-  module_export.fetch_data = fetch_data;
+  module_export.fetch_data = fetch_data.bind(module_export);
   module_export.children_accessor = children_accessor;
-  module_export.getFetchedData = getFetchedData;
+  module_export.getFetchedData = getFetchedData.bind(module_export);
   module_export.onClickFetchData = onClickFetchData;
   return module_export;
 })();

@@ -7,6 +7,7 @@ var TRANSITIONS = (function() {
   var module_export = {};
 
   const DELAY = 750,
+    DELAY_MULT = 25,
     DURATION = 1500,
     CIRCLE_SIZE = 10;
 
@@ -42,8 +43,8 @@ var TRANSITIONS = (function() {
     let transitions = selection
       .attr("d", start_state)
       .transition("links")
-      .delay(function(d) {
-        return DELAY * (d.target.depth - 1);
+      .delay(function(d, i) {
+        return DELAY * (d.target.depth - 1) + i*DELAY_MULT;
       })
       .duration(DURATION)
       .attr("d", end_state);
@@ -84,8 +85,8 @@ var TRANSITIONS = (function() {
     let transitions = selection
       .attr("transform", start_state)
       .transition("nodes")
-      .delay(function(d) {
-        return DELAY * (d.depth - 1);
+      .delay(function(d, i) {
+        return DELAY * (d.depth - 1) + i*DELAY_MULT;
       })
       .duration(DURATION)
       .attr("transform", end_state);
@@ -104,8 +105,8 @@ var TRANSITIONS = (function() {
     let transitions = selection
       .attr("r", 0)
       .transition("circle-fade-in")
-      .delay(function(d) {
-        return DELAY * (d.depth - 1);
+      .delay(function(d, i) {
+        return DELAY * (d.depth - 1) + i*DELAY_MULT;
       })
       .duration(DURATION)
       .attr("r", CIRCLE_SIZE);
@@ -118,8 +119,8 @@ var TRANSITIONS = (function() {
     let transitions = selection
       .style("opacity", 0)
       .transition("name-fade-in")
-      .delay(function(d) {
-        return DELAY * d.depth;
+      .delay(function(d, i) {
+        return DELAY * d.depth + i*DELAY_MULT;
       })
       .duration(DURATION)
       .style("opacity", 1);
@@ -128,7 +129,9 @@ var TRANSITIONS = (function() {
 
   function nameFadeOut(selection) {}
 
+
   module_export.DELAY = DELAY;
+  module_export.DELAY_MULT = DELAY_MULT;
   module_export.DURATION = DURATION;
   module_export.transitionLinksEnter = transitionLinksEnter;
   module_export.transitionLinksExit = transitionLinksExit;
@@ -136,6 +139,5 @@ var TRANSITIONS = (function() {
   module_export.transitionNodesExit = transitionNodesExit;
   module_export.circleFadeIn = circleFadeIn;
   module_export.nameFadeIn = nameFadeIn;
-
   return module_export;
 })();

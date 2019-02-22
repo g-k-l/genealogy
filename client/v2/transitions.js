@@ -38,6 +38,10 @@ var TRANSITIONS = (function() {
     }
   }
 
+  function delay(d, i) {
+    return DELAY * (d.target.depth - 1) + i*DELAY_MULT;
+  }
+
   function transitionLinks(selection, start_state, end_state) {
     /* assign transition to the selected links */
     let transitions = selection
@@ -57,6 +61,17 @@ var TRANSITIONS = (function() {
 
   function transitionLinksExit(selection) {
     return transitionLinks(selection, linkState("end"), linkState("start"));
+  }
+
+  function updateLinks(selection) {
+    return selection
+      .attr("d", linkState("start"))
+      .transition("update-links")
+      .delay(function(d, i) {
+        return DELAY * (d.target.depth - 1) + i*DELAY_MULT;
+      })
+      .duration(DURATION)
+      .attr("d", linkState("end"));
   }
 
 
@@ -101,34 +116,84 @@ var TRANSITIONS = (function() {
     return transitionNodes(selection, nodeState("end"), nodeState("start"))
   }
 
-  function circleFadeIn(selection) {
-    let transitions = selection
-      .attr("r", 0)
-      .transition("circle-fade-in")
+  function updateNodes(selection) {
+
+    function trans(d) {
+      console.log(d);
+      var end  = projection(d.x, d.y);
+      var start;
+      if (d.parent === null) {
+        start = [0, 0];
+      } else {
+        start = projection(d.x0, d.y0);
+      }
+      var trans = [end[0]-start[0], end[1]-start[1]];
+      // console.log(trans);
+      return "translate(" + trans + ")" 
+      // if (d.parent === null) {
+      //   return "translate(" + projection(d.x, d.y) + ")";
+      // } else {
+      //   return "translate(" + projection(d.x-d.parent.x, d.y-d.parent.y) + ")";
+      // }
+      
+    }
+    return selection
+      .transition("update-nodes")
       .delay(function(d, i) {
         return DELAY * (d.depth - 1) + i*DELAY_MULT;
       })
       .duration(DURATION)
+      // .attr("transform", nodeState("end"));
+      .attr("transform", trans); 
+      // .attr("cx", function(d){
+      //   return projection(d.x, d.y)[0];
+      // })
+      // .attr("cy", function(d){
+      //   return projection(d.x, d.y)[1];
+      // })
+  }
+
+  function circleFadeIn(selection) {
+    return selection
+      .attr("r", 0)
+      .transition("circle-fade-in")
+      .delay(function(d, i) {
+        return DELAY/2 * (d.depth - 1) + i*DELAY_MULT;
+      })
+      .duration(DURATION)
       .attr("r", CIRCLE_SIZE);
-    return transitions;
   }
 
   function circleFadeOut(selection) {}
 
   function nameFadeIn(selection) {
     return selection
-      .style("opacity", 0)
-      .transition("name-fade-in")
-      .delay(function(d, i) {
-        return DELAY * d.depth + i*DELAY_MULT;
+      .transition('rotate-text')
+      .attr("transform", rotate_text)
+      .on('end', function() {
+        d3.select(this)
+          .transition("name-fade-in")
+          .delay(function(d, i) {
+            return DELAY/2 * (d.depth - 1) + i*DELAY_MULT;
+          })
+          .duration(DURATION)
+          .style("opacity", 1);  
       })
-      .duration(DURATION)
-      .style("opacity", 1);
+      
   }
 
   function nameFadeOut(selection) {}
 
+  function rotate_text(d) {
+    if (d.x < Math.PI) {
+      return "rotate(" + ((d.x - Math.PI / 2) * 180) / Math.PI + ")";
+    } else {
+      return "rotate(" + ((d.x + Math.PI / 2) * 180) / Math.PI + ")";
+    }
+  }
 
+  module_export.updateLinks = updateLinks;
+  module_export.updateNodes = updateNodes;
   module_export.DELAY = DELAY;
   module_export.DELAY_MULT = DELAY_MULT;
   module_export.DURATION = DURATION;

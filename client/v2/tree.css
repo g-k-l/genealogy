@@ -14,12 +14,9 @@
   stroke-width: 1.5px;
 }
 
-text.name {
+.node text {
+  opacity: 0;
   font: 12px Helvetica Neue;
-}
-
-text.school {
-  font-size: 10px;
 }
 
 .link {

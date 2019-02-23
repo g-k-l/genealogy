@@ -80,7 +80,9 @@ var TRANSITIONS = (function() {
         return DELAY * (d.depth - 1) + i*DELAY_MULT;
       })
       .duration(DURATION)
-      .attr("transform", nodeState("end"));
+      .attr("transform", nodeState("end"))
+      .attr("x0", function(d) {return d.x})
+      .attr("y0", function(d) {return d.y});
     return transitions;
   }
 
@@ -112,6 +114,7 @@ var TRANSITIONS = (function() {
 
   function rotate_text(d) {
     if (d.x < Math.PI) {
+      // return "rotate(" + d.x + ")";
       return "rotate(" + ((d.x - Math.PI / 2) * 180) / Math.PI + ")";
     } else {
       return "rotate(" + ((d.x + Math.PI / 2) * 180) / Math.PI + ")";

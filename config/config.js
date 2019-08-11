@@ -1,8 +1,7 @@
-var dotenv = require("dotenv").config()
-var port = 8080
+require("dotenv").config()
 
 module.exports = {
     ENV: process.env.ENVIRONMENT,
-    port: port,
+    PORT: process.env.ENVIRONMENT === "PRODUCTION" ? 80: 8080,
     mongo_uri: process.env.MONGO_URI
 }

@@ -5,8 +5,8 @@ var mongo = require("./lib/mongo");
 var utils = require("./lib/utils");
 var collection_utils = require("./lib/collection_utils");
 var config = require("./config/config");
-var https = require("https")
 var http = require("http")
+var enforce = require("express-sslify");
 
 app.set("trust proxy", true);
 app.use(express.static(__dirname));
@@ -47,11 +47,17 @@ mongo.connect(function(database) {
   var collection = mongodb.collection("phds2");
   collection_utils = collection_utils.init(collection);
 
-  if (config.ENV === "PRODUCTION") {
-    https.createServer({}, app).listen(443);
-  } else {
-    http.createServer(app, function() {
-      console.log("Listening at Port 80");
-    }).listen(80)
-  }
+  /*Heroku, nodejitsu and other hosters often use reverse proxies
+    which offer SSL endpoints but then forward unencrypted HTTP
+    traffic to the website. This makes it difficult to detect if
+    the original request was indeed via HTTPS. Luckily, most
+    reverse proxies set the x-forwarded-proto header flag with
+    the original request scheme. express-sslify is ready for such
+    scenarios, but you have to specifically request the evaluation 
+    of this flag: { trustProtoHeader: true } */
+
+  app.use(enforce.HTTPS({ trustProtoHeader: true }));
+  http.createServer(app).listen(config.PORT, function(){
+    console.log("Listening on port: " + config.PORT)
+  })
 });

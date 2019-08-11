@@ -1,14 +1,29 @@
-var express = require("express");
-var app = express();
-var path = require("path");
-var mongo = require("./lib/mongo");
-var utils = require("./lib/utils");
-var collection_utils = require("./lib/collection_utils");
-var config = require("./config/config");
-var http = require("http")
-var enforce = require("express-sslify");
+const express = require("express");
+const app = express();
+const path = require("path");
+const http = require("http");
+const https = require("https");
+const fs = require("fs");
+const enforce = require("express-sslify");
 
+const mongo = require("./lib/mongo");
+const utils = require("./lib/utils");
+const config = require("./config/config");
+var collection_utils = require("./lib/collection_utils");
+
+/*Heroku, nodejitsu and other hosters often use reverse proxies
+  which offer SSL endpoints but then forward unencrypted HTTP
+  traffic to the website. This makes it difficult to detect if
+  the original request was indeed via HTTPS. Luckily, most
+  reverse proxies set the x-forwarded-proto header flag with
+  the original request scheme. express-sslify is ready for such
+  scenarios, but you have to specifically request the evaluation 
+  of this flag: { trustProtoHeader: true }. Also, we need to set
+  { trustXForwardedHostHeader: true } as well so we can use the
+  x-forwarded-host header to redirect http to https*/
 app.use(enforce.HTTPS({ trustXForwardedHostHeader: true, trustProtoHeader: true }));
+
+/* Static middleware */
 app.use(express.static(__dirname));
 app.use(express.static(__dirname + "/client"));
 
@@ -41,22 +56,26 @@ app.route("/tree/name/:root_name").get(function(req, res) {
   });
 });
 
+function logListen(port) {
+  console.log("Listening on port: " + port);
+}
+
 // start app here
 mongo.connect(function(database) {
   var mongodb = database;
   var collection = mongodb.collection("phds2");
   collection_utils = collection_utils.init(collection);
 
-  /*Heroku, nodejitsu and other hosters often use reverse proxies
-    which offer SSL endpoints but then forward unencrypted HTTP
-    traffic to the website. This makes it difficult to detect if
-    the original request was indeed via HTTPS. Luckily, most
-    reverse proxies set the x-forwarded-proto header flag with
-    the original request scheme. express-sslify is ready for such
-    scenarios, but you have to specifically request the evaluation 
-    of this flag: { trustProtoHeader: true } */
-
-  http.createServer(app).listen(config.PORT, function(){
-    console.log("Listening on port: " + config.PORT)
-  })
+  if (config.ENV === "PRODUCTION") {
+    http.createServer(app)
+        .listen(config.PORT, logListen(config.PORT))
+  } else {
+    /* Use self-signed credentials for local development */
+    var options = {
+      key: fs.readFileSync('./config/server.key'),
+      cert: fs.readFileSync('./config/server.crt'),
+    }
+    https.createServer(options, app)
+         .listen(config.PORT, logListen(config.PORT))
+  }
 });

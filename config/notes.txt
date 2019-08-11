@@ -1,0 +1,5 @@
+server.crt and server.key are meant for local development only. The associated local root key is added to the machine hence trusted by the web browser during development. Do not commit these into the code base, especially public repos.
+
+Note, for firefox, the following setting need to be enabled via about:config in order to use self-signed certificates: security.enterprise_roots.enabled.
+
+As for how to create a root key and self-sign certificates, see https://www.freecodecamp.org/news/how-to-get-https-working-on-your-local-development-environment-in-5-minutes-7af615770eec/

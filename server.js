@@ -8,7 +8,7 @@ var config = require("./config/config");
 var http = require("http")
 var enforce = require("express-sslify");
 
-app.set("trust proxy", true);
+app.use(enforce.HTTPS({ trustXForwardedHostHeader: true, trustProtoHeader: true }));
 app.use(express.static(__dirname));
 app.use(express.static(__dirname + "/client"));
 
@@ -56,7 +56,6 @@ mongo.connect(function(database) {
     scenarios, but you have to specifically request the evaluation 
     of this flag: { trustProtoHeader: true } */
 
-  app.use(enforce.HTTPS({ trustProtoHeader: true }));
   http.createServer(app).listen(config.PORT, function(){
     console.log("Listening on port: " + config.PORT)
   })

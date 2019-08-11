@@ -23,6 +23,7 @@
     "express-session": "^1.15.1",
     "express-sslify": "^1.2.0",
     "mongoose": "^4.7.7",
-    "nodemon": "^1.11.0"
+    "nodemon": "^1.19.1",
+    "s3-proxy": "^1.2.1"
   }
 }

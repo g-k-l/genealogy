@@ -36,7 +36,7 @@ const s3ProxyWrapperGenealogy = function(req, res, next) {
     accessKeyId: config.AWS_ACCESS_KEY_ID,
     secretAccessKey: config.AWS_SECRET_ACCESS_KEY,
     overrideCacheControl: 'max-age=2592000',
-    defaultKey: 'v2/tree.html',
+    defaultKey: 'tree.html',
   })(req, res, next);
 };
 

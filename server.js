@@ -12,34 +12,35 @@ const utils = require("./lib/utils");
 const config = require("./config/config");
 var collection_utils = require("./lib/collection_utils");
 
-
 const s3ProxyWrapperTicTacToe = function(req, res, next) {
   /*modify the URL so that TICTACTOE_URL_PATH is not prepended
     as a directory/prefix in the S3 bucket path */
-  req.originalUrl = req.originalUrl.replace(config.TICTACTOE_URL_PATH, '')
+  req.originalUrl = req.originalUrl.replace(config.TICTACTOE_URL_PATH, "");
   return s3Proxy({
     bucket: config.TICTACTOE_BUCKET_NAME,
-    prefix: '',
+    prefix: "",
     accessKeyId: config.AWS_ACCESS_KEY_ID,
     secretAccessKey: config.AWS_SECRET_ACCESS_KEY,
-    overrideCacheControl: 'max-age=2592000',
-    defaultKey: 'index.html',
+    overrideCacheControl: "max-age=30",
+    defaultKey: "index.html"
   })(req, res, next);
 };
 
 const s3ProxyWrapperGenealogy = function(req, res, next) {
-  /* Route genealogy static urls to the corresponding s3 bucket */ 
-  req.originalUrl = req.originalUrl.replace(config.GENEALOGY_URL_PATH, '')
+  /* Route genealogy static urls to the corresponding s3 bucket */
+  req.originalUrl = req.originalUrl.replace(config.GENEALOGY_URL_PATH, "");
   return s3Proxy({
     bucket: config.GENEALOGY_BUCKET_NAME,
-    prefix: '',
+    prefix: "",
     accessKeyId: config.AWS_ACCESS_KEY_ID,
     secretAccessKey: config.AWS_SECRET_ACCESS_KEY,
-    overrideCacheControl: 'max-age=2592000',
-    defaultKey: 'tree.html',
+    overrideCacheControl: "max-age=30",
+    defaultKey: "tree.html"
   })(req, res, next);
 };
 
+/* for caching mathematician data from MongoDB */
+const genealogyCache = new Map();
 
 /*Heroku, nodejitsu and other hosters often use reverse proxies
   which offer SSL endpoints but then forward unencrypted HTTP
@@ -47,25 +48,39 @@ const s3ProxyWrapperGenealogy = function(req, res, next) {
   the original request was indeed via HTTPS. Luckily, most
   reverse proxies set the x-forwarded-proto header flag with
   the original request scheme. express-sslify is ready for such
-  scenarios, but you have to specifically request the evaluation 
+  scenarios, but you have to specifically request the evaluation
   of this flag: { trustProtoHeader: true }. Also, we need to set
   { trustXForwardedHostHeader: true } as well so we can use the
   x-forwarded-host header to redirect http to https*/
-app.use(enforce.HTTPS({ trustXForwardedHostHeader: true, trustProtoHeader: true }));
+app.use(
+  enforce.HTTPS({ trustXForwardedHostHeader: true, trustProtoHeader: true })
+);
 
 /* Static middleware */
 app.use(express.static(__dirname));
 app.use(express.static(__dirname + "/client"));
 
 app.route("/").get(function(req, res) {
-  res.redirect("/genealogy")
+  res.redirect("/genealogy");
 });
 
 app.route("/tree/:math_ids").get(function(req, res) {
   try {
     var id_array = req.params.math_ids.split(",").map(Number);
-    collection_utils.fetchById(id_array, function(items) {
-      res.json(items);
+    var toQuery = id_array.filter(function(id) {
+        return !genealogyCache.has(id);
+      }),
+      toGetFromCache = id_array.filter(function(id) {
+        return genealogyCache.has(id);
+      });
+    collection_utils.fetchById(toQuery, function(fromDB) {
+      fromDB.map(function(item) {
+        genealogyCache.set(item.math_id, item);
+      });
+      var fromCache = toGetFromCache.map(function(id) {
+        return genealogyCache.get(id);
+      });
+      res.json(fromCache.concat(fromDB));
     });
   } catch (e) {
     res.json({ msg: "parseInt failed. Error: " + e });
@@ -95,15 +110,15 @@ mongo.connect(function(database) {
   collection_utils = collection_utils.init(collection);
 
   if (config.ENV === "PRODUCTION") {
-    http.createServer(app)
-        .listen(config.PORT, logListen(config.PORT))
+    http.createServer(app).listen(config.PORT, logListen(config.PORT));
   } else {
     /* Use self-signed credentials for local development */
     var options = {
-      key: fs.readFileSync('./config/server.key'),
-      cert: fs.readFileSync('./config/server.crt'),
-    }
-    https.createServer(options, app)
-         .listen(config.PORT, logListen(config.PORT))
+      key: fs.readFileSync("./config/server.key"),
+      cert: fs.readFileSync("./config/server.crt")
+    };
+    https
+      .createServer(options, app)
+      .listen(config.PORT, logListen(config.PORT));
   }
 });

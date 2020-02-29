@@ -28,16 +28,6 @@ text.school {
   stroke-width: 1.5px;
 }
 
-.search-nodes circle {
-  fill: #fff;
-  stroke: steelblue;
-  stroke-width: 1.5px;
-}
-
-.search-nodes text {
-  font: 12px sans-serif;
-}
-
 .legend-title {
   font: 20px "Helvetica Neue";
   font-weight: 700;
@@ -46,19 +36,6 @@ text.school {
 .legend-detail {
   font: 16px "Helvetica Neue";
   font-weight: 200;
-}
-
-.year-ticks {
-  font: 14px sans-serif;
-}
-
-.d3-tip {
-  font: 12px sans-serif;
-  line-height: 1;
-  padding: 12px;
-  background: grey;
-  color: #fff;
-  border-radius: 2px;
 }
 
 .svg-canvas {

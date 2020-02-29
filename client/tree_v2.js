@@ -3,13 +3,19 @@ const current_year = date.getFullYear();
 
 const GAUSS_ID = 18231,
   GAUSS_GRAD_DATE = 1799,
-  SVG_CANVAS_WIDTH = Math.min(
-    window.innerWidth * 0.9,
-    window.innerHeight * 0.9
+  SVG_CANVAS_WIDTH = Math.max(
+    Math.min(
+      window.innerWidth * 0.9,
+      window.innerHeight * 0.9
+    ),
+    1080
   ),
-  SVG_CANVAS_HEIGHT = Math.min(
-    window.innerWidth * 0.9,
-    window.innerHeight * 0.9
+  SVG_CANVAS_HEIGHT = Math.max(
+    Math.min(
+      window.innerWidth * 0.9,
+      window.innerHeight * 0.9
+    ),
+    1080
   ),
   TREE_MARGIN_FRACTION = 0.8,
   CIRCLE_SIZE = 10,
@@ -109,7 +115,7 @@ function draw_tree(data) {
     .attr("transform", center_root())
     .attr("id", "tree-group");
 
-  /* 
+  /*
     Assume coordinates are Polar, then convert
     back to cartesian representation.
   */
